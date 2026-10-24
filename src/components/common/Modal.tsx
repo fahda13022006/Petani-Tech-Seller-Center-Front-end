@@ -128,8 +128,9 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 6,
     borderRadius: 9999,
-    backgroundColor: '#F6F8F4',
+    backgroundColor: '#F1F5F9',
   },
+
   body: {
     maxHeight: 500,
   },

@@ -9,10 +9,12 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from '@/theme/colors';
 
 export interface ButtonProps {
   children?: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'softGreen';
+  variant?: 'primary' | 'gradient' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'softGreen';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   disabled?: boolean;
@@ -37,6 +39,67 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
 }) => {
   const isDisabled = disabled || isLoading;
+  const isGradient = variant === 'primary' || variant === 'gradient';
+
+  const isTextLike =
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    (Array.isArray(children) && children.every((c) => typeof c === 'string' || typeof c === 'number'));
+
+  const content = (
+    <>
+      {isLoading ? (
+        <ActivityIndicator
+          size="small"
+          color={
+            variant === 'outline' || variant === 'ghost' || variant === 'softGreen'
+              ? colors.primary.dark
+              : '#FFFFFF'
+          }
+          style={styles.spinner}
+        />
+      ) : (
+        leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>
+      )}
+
+      {isTextLike ? (
+        <Text
+          style={[
+            styles.text,
+            isGradient ? styles.primaryText : styles[`${variant}Text`],
+            styles[`${size}Text`],
+            textStyle,
+          ]}
+        >
+          {children}
+        </Text>
+      ) : (
+        children
+      )}
+
+      {!isLoading && rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
+    </>
+  );
+
+  if (isGradient) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        disabled={isDisabled}
+        onPress={onPress}
+        style={[styles.touchableWrapper, isDisabled && styles.disabled, style]}
+      >
+        <LinearGradient
+          colors={colors.primary.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.8 }}
+          style={[styles.base, styles[size], styles.gradientBase]}
+        >
+          {content}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
 
   return (
     <TouchableOpacity
@@ -51,30 +114,21 @@ export const Button: React.FC<ButtonProps> = ({
         style,
       ]}
     >
-      {isLoading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'outline' || variant === 'ghost' || variant === 'softGreen' ? '#3E7821' : '#FFFFFF'}
-          style={styles.spinner}
-        />
-      ) : (
-        leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>
-      )}
-
-      {typeof children === 'string' || typeof children === 'number' ? (
-        <Text style={[styles.text, styles[`${variant}Text`], styles[`${size}Text`], textStyle]}>
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
-
-      {!isLoading && rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
+      {content}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  touchableWrapper: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#32CD32',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
   base: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -82,47 +136,56 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     gap: 8,
   },
+  gradientBase: {
+    width: '100%',
+  },
   sm: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 34,
+    paddingVertical: 7,
+    minHeight: 36,
   },
   md: {
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    minHeight: 44,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    minHeight: 46,
   },
   lg: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingVertical: 14,
     minHeight: 52,
   },
   primary: {
-    backgroundColor: '#5A9B2E',
+    backgroundColor: colors.primary.DEFAULT,
+  },
+  gradient: {
+    backgroundColor: colors.primary.DEFAULT,
   },
   secondary: {
-    backgroundColor: '#2F2F2F',
+    backgroundColor: colors.neutral[800],
   },
   outline: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#7FB257',
+    backgroundColor: colors.neutral.white,
+    borderWidth: 1.5,
+    borderColor: colors.primary.DEFAULT,
   },
   ghost: {
     backgroundColor: 'transparent',
   },
   danger: {
-    backgroundColor: '#D95757',
+    backgroundColor: colors.semantic.danger.DEFAULT,
   },
   softGreen: {
-    backgroundColor: '#EAF4E3',
+    backgroundColor: colors.primary.soft,
+    borderWidth: 1,
+    borderColor: colors.primary.border,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.55,
   },
   text: {
     fontWeight: '700',
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
   smText: {
     fontSize: 12,
@@ -131,25 +194,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   lgText: {
-    fontSize: 16,
+    fontSize: 15,
   },
   primaryText: {
+    color: '#FFFFFF',
+  },
+  gradientText: {
     color: '#FFFFFF',
   },
   secondaryText: {
     color: '#FFFFFF',
   },
   outlineText: {
-    color: '#3E7821',
+    color: colors.primary.dark,
   },
   ghostText: {
-    color: '#2F2F2F',
+    color: colors.neutral[800],
   },
   dangerText: {
     color: '#FFFFFF',
   },
   softGreenText: {
-    color: '#3E7821',
+    color: colors.primary.dark,
   },
   spinner: {
     marginRight: 4,
@@ -159,3 +225,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+

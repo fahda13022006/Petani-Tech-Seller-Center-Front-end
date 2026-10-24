@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, StyleProp, ViewStyle, TextStyle } from 'react-native';
 
 export interface BadgeProps {
+
   children: React.ReactNode;
   variant?: 'success' | 'warning' | 'danger' | 'info' | 'brand' | 'neutral';
   size?: 'sm' | 'md';
@@ -18,10 +19,15 @@ export const Badge: React.FC<BadgeProps> = ({
   style,
   textStyle,
 }) => {
+  const isTextLike =
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    (Array.isArray(children) && children.every((c) => typeof c === 'string' || typeof c === 'number'));
+
   return (
     <View style={[styles.base, styles[variant], size === 'sm' ? styles.sizeSm : styles.sizeMd, style]}>
       {dot && <View style={[styles.dot, styles[`${variant}Dot`]]} />}
-      {typeof children === 'string' || typeof children === 'number' ? (
+      {isTextLike ? (
         <Text style={[styles.text, styles[`${variant}Text`], size === 'sm' ? styles.textSm : styles.textMd, textStyle]}>
           {children}
         </Text>
@@ -42,19 +48,19 @@ const styles = StyleSheet.create({
   },
   sizeSm: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 2.5,
     gap: 4,
   },
   sizeMd: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 4.5,
     gap: 5,
   },
   text: {
-    fontWeight: '600',
+    fontWeight: '700',
   },
   textSm: {
-    fontSize: 10,
+    fontSize: 10.5,
   },
   textMd: {
     fontSize: 12,
@@ -65,63 +71,64 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   brand: {
-    backgroundColor: '#EAF4E3',
-    borderColor: '#A9CF8C',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
   },
   brandText: {
-    color: '#3E7821',
+    color: '#15803D',
   },
   brandDot: {
-    backgroundColor: '#5A9B2E',
+    backgroundColor: '#22C55E',
   },
   success: {
-    backgroundColor: '#EAF6EB',
-    borderColor: '#A5D6A7',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
   },
   successText: {
-    color: '#2E7D32',
+    color: '#166534',
   },
   successDot: {
-    backgroundColor: '#4C9B52',
+    backgroundColor: '#22C55E',
   },
   warning: {
-    backgroundColor: '#FFF8E7',
+    backgroundColor: '#FFFBEB',
     borderColor: '#FDE68A',
   },
   warningText: {
-    color: '#D97706',
+    color: '#B45309',
   },
   warningDot: {
-    backgroundColor: '#E9A23B',
+    backgroundColor: '#F59E0B',
   },
   danger: {
-    backgroundColor: '#FDF0F0',
-    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
   },
   dangerText: {
-    color: '#D95757',
+    color: '#B91C1C',
   },
   dangerDot: {
-    backgroundColor: '#D95757',
+    backgroundColor: '#EF4444',
   },
   info: {
-    backgroundColor: '#EDF5FD',
+    backgroundColor: '#EFF6FF',
     borderColor: '#BFDBFE',
   },
   infoText: {
-    color: '#2563EB',
+    color: '#1D4ED8',
   },
   infoDot: {
-    backgroundColor: '#4C89C6',
+    backgroundColor: '#3B82F6',
   },
   neutral: {
-    backgroundColor: '#F4F4F4',
-    borderColor: '#E5E5E5',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   neutralText: {
-    color: '#555555',
+    color: '#64748B',
   },
   neutralDot: {
-    backgroundColor: '#8E8E8E',
+    backgroundColor: '#94A3B8',
   },
 });
+

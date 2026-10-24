@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AppNavigator } from '@/navigation/AppNavigator';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ToastContainer } from '@/components/common/ToastContainer';
+import { colors } from '@/theme/colors';
 
 export default function App() {
   const initAuth = useAuthStore((state) => state.initAuth);
@@ -21,8 +22,8 @@ export default function App() {
       <StatusBar style="dark" />
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#34764A" />
-          <Text style={styles.loadingText}>Memuat Petani Tech Seller...</Text>
+          <ActivityIndicator size="large" color={colors.primary.DEFAULT} />
+          <Text style={styles.loadingText}>Memuat Petani Tech Seller Center...</Text>
         </View>
       ) : error && !user ? (
         <View style={styles.loading}>
@@ -48,10 +49,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#F6F8F4',
+    backgroundColor: '#F8FAFC',
     padding: 24,
   },
-  loadingText: { color: '#647067', textAlign: 'center' },
-  errorTitle: { color: '#24342A', fontSize: 18, fontWeight: '700' },
-  retry: { color: '#34764A', fontWeight: '700', padding: 12 },
+  loadingText: { color: '#64748B', textAlign: 'center', fontSize: 13, fontWeight: '500' },
+  errorTitle: { color: '#0F172A', fontSize: 18, fontWeight: '800' },
+  retry: { color: '#32CD32', fontWeight: '800', padding: 12, fontSize: 14 },
 });
+

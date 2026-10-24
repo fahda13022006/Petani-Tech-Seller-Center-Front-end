@@ -1,27 +1,28 @@
 {
   "user": {
-    "id": "usr-seller-01",
-    "name": "Budi Santoso",
-    "email": "seller@petanitech.id",
-    "phone": "0812-9876-5432",
+    "id": "usr-seller-fahda",
+    "name": "Fahda Febriya",
+    "email": "fahda@petanitech.id",
+    "phone": "0812-3456-7890",
     "role": "seller",
-    "storeName": "Pak Budi Agro Store",
-    "storeId": "ID-AGRO-7729",
-    "status": "Seller Aktif",
-    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
-    "storeAddress": "Sentra Distribusi Agribisnis Blok C No. 14, Pagaden, Kab. Subang, Jawa Barat 41252",
-    "joinedDate": "Maret 2025",
-    "rating": 4.9,
-    "totalReview": 842,
-    "balance": 8500000,
+    "storeName": "Toko Tani Makmur Fahda",
+    "storeId": "ID-AGRO-INDRAMAYU-01",
+    "status": "Seller Terverifikasi",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+    "storeAddress": "Jl. Raya Indramayu - Cirebon No. 88, Kec. Jatibarang, Kab. Indramayu, Jawa Barat 45214",
+    "joinedDate": "Januari 2025",
+    "rating": 4.95,
+    "totalReview": 1280,
+    "balance": 12850000,
     "bankAccount": {
       "bankName": "Bank Rakyat Indonesia (BRI)",
-      "accountNumber": "0123-01-084920-50-8",
-      "accountHolder": "BUDI SANTOSO"
+      "accountNumber": "4321-01-098765-53-2",
+      "accountHolder": "FAHDA FEBRIYA"
     }
   },
   "credentials": {
-    "email": "seller@petanitech.id",
+    "email": "fahda@petanitech.id",
     "password": "123456"
   }
 }
+

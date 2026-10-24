@@ -75,14 +75,15 @@ export function Surface({ children, style }: { children: ReactNode; style?: Styl
   return <View style={[styles.surface, style]}>{children}</View>;
 }
 
-export const pageColors = {
-  green: '#34764A',
-  dark: '#213329',
-  muted: '#68746B',
-  background: '#F6F8F4',
-  border: '#E8ECE7',
+const pageColors = {
+  green: '#32CD32',
+  dark: '#0F172A',
+  muted: '#64748B',
+  background: '#F8FAFC',
+  border: '#E2E8F0',
   white: '#FFFFFF',
 };
+
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: pageColors.background },

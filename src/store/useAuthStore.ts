@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { UserProfile } from '@/types';
-import { authService } from '@/services/authService';
+import { authService, RegisterSellerData } from '@/services/authService';
 
 interface AuthState {
   user: UserProfile | null;
@@ -8,6 +8,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   login: (identifier: string, pass: string) => Promise<void>;
+  register: (data: RegisterSellerData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   initAuth: () => Promise<void>;
@@ -45,6 +46,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  register: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const user = await authService.register(data);
+      set({ user, isAuthenticated: true, isLoading: false, error: null });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal mendaftar';
+      set({ isLoading: false, error: msg });
+      throw err;
+    }
+  },
+
   logout: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -67,3 +80,4 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
