@@ -1,0 +1,170 @@
+[
+  {
+    "id": "PT20261001",
+    "orderNumber": "#PT20261001",
+    "buyerName": "Toko Tani Makmur",
+    "buyerPhone": "0812-3456-7890",
+    "buyerAddress": "Jl. Raya Pertanian No. 45, Pagaden, Subang, Jawa Barat 41252",
+    "status": "Diproses",
+    "items": [
+      {
+        "productId": "prod-005",
+        "productName": "Pupuk NPK Mutiara 16-16-16 Sak 50kg",
+        "category": "Pupuk",
+        "quantity": 2,
+        "unitPrice": 520000,
+        "subtotal": 1040000,
+        "productImage": "https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=500&auto=format&fit=crop&q=80",
+        "unit": "Sak (50kg)"
+      }
+    ],
+    "totalAmount": 1040000,
+    "shippingFee": 35000,
+    "courier": "AgroCargo Express (Kargo Cepat)",
+    "trackingNumber": "AGC-SBG-99210",
+    "createdAt": "2026-10-07 14:20",
+    "paymentMethod": "Saldo Petani Tech / Transfer Bank",
+    "note": "Mohon dilapisi plastik ekstra anti hujan saat pengiriman."
+  },
+  {
+    "id": "PT20261002",
+    "orderNumber": "#PT20261002",
+    "buyerName": "Kelompok Tani Subur Makmur",
+    "buyerPhone": "0857-1122-3344",
+    "buyerAddress": "Desa Sukamandi Jaya RT 03/02, Ciasem, Subang",
+    "status": "Diproses",
+    "items": [
+      {
+        "productId": "prod-001",
+        "productName": "Pupuk Organik Premium Granul 25kg",
+        "category": "Pupuk",
+        "quantity": 5,
+        "unitPrice": 75000,
+        "subtotal": 375000,
+        "productImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=500&auto=format&fit=crop&q=80",
+        "unit": "Sak (25kg)"
+      },
+      {
+        "productId": "prod-004",
+        "productName": "Benih Padi Ciherang Unggul Sertifikasi 5kg",
+        "category": "Benih",
+        "quantity": 2,
+        "unitPrice": 95000,
+        "subtotal": 190000,
+        "productImage": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=500&auto=format&fit=crop&q=80",
+        "unit": "Kemasan (5kg)"
+      }
+    ],
+    "totalAmount": 565000,
+    "shippingFee": 40000,
+    "courier": "J&T Cargo Pertanian",
+    "trackingNumber": "JT-PTN-88421",
+    "createdAt": "2026-10-07 11:45",
+    "paymentMethod": "BCA Virtual Account",
+    "note": "Kirim sore ini jika memungkinkan Pak Budi."
+  },
+  {
+    "id": "PT20261003",
+    "orderNumber": "#PT20261003",
+    "buyerName": "Haji Mansyur Agro",
+    "buyerPhone": "0819-7766-5544",
+    "buyerAddress": "Kecamatan Compreng, Kab. Subang, Jawa Barat",
+    "status": "Menunggu Pembayaran",
+    "items": [
+      {
+        "productId": "prod-003",
+        "productName": "Sprayer Elektrik Pertanian 16 Liter Baterai Lithium",
+        "category": "Alat Pertanian",
+        "quantity": 1,
+        "unitPrice": 350000,
+        "subtotal": 350000,
+        "productImage": "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=500&auto=format&fit=crop&q=80",
+        "unit": "Unit"
+      }
+    ],
+    "totalAmount": 350000,
+    "shippingFee": 20000,
+    "courier": "SiCepat Agro",
+    "createdAt": "2026-10-07 17:10",
+    "paymentMethod": "Mandiri Livin Virtual Account"
+  },
+  {
+    "id": "PT20261004",
+    "orderNumber": "#PT20261004",
+    "buyerName": "CV Berkah Tani Mandiri",
+    "buyerPhone": "0821-9988-7711",
+    "buyerAddress": "Jl. Ahmad Yani No. 12, Indramayu, Jawa Barat",
+    "status": "Dikirim",
+    "items": [
+      {
+        "productId": "prod-002",
+        "productName": "Pestisida Bio Natural Ekstrak Mimba 1 Liter",
+        "category": "Pestisida",
+        "quantity": 10,
+        "unitPrice": 85000,
+        "subtotal": 850000,
+        "productImage": "https://images.unsplash.com/photo-1592417817098-8f3d6910985c?w=500&auto=format&fit=crop&q=80",
+        "unit": "Botol (1L)"
+      }
+    ],
+    "totalAmount": 850000,
+    "shippingFee": 45000,
+    "courier": "AgroCargo Express",
+    "trackingNumber": "AGC-IDM-44512",
+    "createdAt": "2026-10-06 09:30",
+    "paymentMethod": "BRI Virtual Account",
+    "note": "Pastikan segel botol rapat."
+  },
+  {
+    "id": "PT20261005",
+    "orderNumber": "#PT20261005",
+    "buyerName": "Tani Jaya Karawang",
+    "buyerPhone": "0813-4455-6677",
+    "buyerAddress": "Kec. Telagasari, Karawang Timur, Jawa Barat",
+    "status": "Selesai",
+    "items": [
+      {
+        "productId": "prod-001",
+        "productName": "Pupuk Organik Premium Granul 25kg",
+        "category": "Pupuk",
+        "quantity": 10,
+        "unitPrice": 75000,
+        "subtotal": 750000,
+        "productImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=500&auto=format&fit=crop&q=80",
+        "unit": "Sak (25kg)"
+      }
+    ],
+    "totalAmount": 750000,
+    "shippingFee": 50000,
+    "courier": "JNE Trucking (JTR)",
+    "trackingNumber": "JTR-KRW-11029",
+    "createdAt": "2026-10-04 13:15",
+    "paymentMethod": "QRIS Petani Tech"
+  },
+  {
+    "id": "PT20261006",
+    "orderNumber": "#PT20261006",
+    "buyerName": "Agro Sentosa Cibitung",
+    "buyerPhone": "0878-5544-3322",
+    "buyerAddress": "Cibitung, Bekasi, Jawa Barat",
+    "status": "Dibatalkan",
+    "items": [
+      {
+        "productId": "prod-007",
+        "productName": "Cangkul Baja Super Tani Anti Lengket Gagang Kayu Jati",
+        "category": "Alat Pertanian",
+        "quantity": 2,
+        "unitPrice": 115000,
+        "subtotal": 230000,
+        "productImage": "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=500&auto=format&fit=crop&q=80",
+        "unit": "Pcs"
+      }
+    ],
+    "totalAmount": 230000,
+    "shippingFee": 25000,
+    "courier": "SiCepat Agro",
+    "createdAt": "2026-10-03 16:40",
+    "paymentMethod": "Transfer Bank",
+    "note": "Dibatalkan oleh pembeli: salah memilih alamat pengiriman."
+  }
+]
