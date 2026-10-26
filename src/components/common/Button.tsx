@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   StyleProp,
   ViewStyle,
@@ -12,6 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
+
+import { PressableScale } from './Motion';
 
 export interface ButtonProps {
   children?: React.ReactNode;
@@ -91,8 +92,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (isGradient) {
     return (
-      <TouchableOpacity
-        activeOpacity={0.82}
+      <PressableScale
         disabled={isDisabled}
         onPress={onPress}
         hitSlop={hitSlop}
@@ -105,15 +105,15 @@ export const Button: React.FC<ButtonProps> = ({
           end={{ x: 1, y: 0.8 }}
           style={[styles.base, styles[size], styles.gradientBase]}
         >
+          <View style={styles.btnTopSheen} />
           {content}
         </LinearGradient>
-      </TouchableOpacity>
+      </PressableScale>
     );
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.78}
+    <PressableScale
       disabled={isDisabled}
       onPress={onPress}
       hitSlop={hitSlop}
@@ -127,7 +127,7 @@ export const Button: React.FC<ButtonProps> = ({
       ]}
     >
       {content}
-    </TouchableOpacity>
+    </PressableScale>
   );
 };
 
@@ -150,6 +150,16 @@ const styles = StyleSheet.create({
   },
   gradientBase: {
     width: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  btnTopSheen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
   },
   sm: {
     paddingHorizontal: 12,

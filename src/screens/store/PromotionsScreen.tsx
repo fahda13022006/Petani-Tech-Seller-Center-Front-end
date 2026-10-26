@@ -16,10 +16,12 @@ import { Card } from '@/components/cards/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FadeInUp } from '@/components/common/Motion';
 import { Input } from '@/components/forms/Input';
 import { formatRupiah } from '@/constants';
 import { colors } from '@/theme/colors';
 import { useTheme } from '@/theme';
+import { useBottomTabSpace } from '@/navigation/hooks';
 import {
   Plus,
   Tag,
@@ -33,6 +35,7 @@ const PROMO_TYPES: PromotionType[] = ['Diskon Produk', 'Voucher', 'Campaign'];
 
 export function PromotionsScreen() {
   const { themeColors, isDarkMode } = useTheme();
+  const bottomSpace = useBottomTabSpace(28);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'Diskon Produk' | 'Voucher' | 'Campaign'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -180,21 +183,23 @@ export function PromotionsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Banner Promo Musim Tanam */}
-        <Card style={styles.bannerCard}>
-          <View style={styles.bannerIconBox}>
-            <Flame size={20} color="#FFFFFF" />
-          </View>
-          <View style={styles.bannerText}>
-            <Text style={styles.bannerTitle}>Campaign Musim Tanam Rendeng</Text>
-            <Text style={styles.bannerSub}>
-              Subsidi komisi 1% untuk produk benih dan pupuk organik wilayah Indramayu & Pantura.
-            </Text>
-          </View>
-        </Card>
+        <FadeInUp delay={30}>
+          <Card style={styles.bannerCard}>
+            <View style={styles.bannerIconBox}>
+              <Flame size={20} color="#FFFFFF" />
+            </View>
+            <View style={styles.bannerText}>
+              <Text style={styles.bannerTitle}>Campaign Musim Tanam Rendeng</Text>
+              <Text style={styles.bannerSub}>
+                Subsidi komisi 1% untuk produk benih dan pupuk organik wilayah Indramayu & Pantura.
+              </Text>
+            </View>
+          </Card>
+        </FadeInUp>
 
         {/* Promo Cards List */}
         {filtered.length === 0 ? (
@@ -208,22 +213,22 @@ export function PromotionsScreen() {
             }}
           />
         ) : (
-          filtered.map((promo) => {
+          filtered.map((promo, index) => {
             const usagePercent = promo.totalQuota
               ? Math.min(100, Math.round((promo.usedCount / promo.totalQuota) * 100))
               : 0;
 
             return (
-              <Card
-                key={promo.id}
-                style={[
-                  styles.promoCard,
-                  {
-                    backgroundColor: themeColors.cardBackground,
-                    borderColor: themeColors.cardBorder,
-                  },
-                ]}
-              >
+              <FadeInUp key={promo.id} delay={70 + Math.min(index, 6) * 35}>
+                <Card
+                  style={[
+                    styles.promoCard,
+                    {
+                      backgroundColor: themeColors.cardBackground,
+                      borderColor: themeColors.cardBorder,
+                    },
+                  ]}
+                >
                 <View style={styles.promoHeader}>
                   <View style={styles.promoHeaderLeft}>
                     <View
@@ -318,8 +323,9 @@ export function PromotionsScreen() {
                   </Text>
                 </View>
               </Card>
-            );
-          })
+            </FadeInUp>
+          );
+        })
         )}
       </ScrollView>
 

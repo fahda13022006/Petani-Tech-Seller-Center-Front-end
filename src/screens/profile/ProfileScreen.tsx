@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ScrollView,
   Image,
@@ -10,13 +9,14 @@ import {
   Modal,
   Switch,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card } from '@/components/cards/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
+import { FadeInUp, PressableScale } from '@/components/common/Motion';
 import { Input } from '@/components/forms/Input';
 import { ThemeSelector } from '@/components/theme/ThemeSelector';
 import { typography } from '@/theme/typography';
@@ -36,15 +36,14 @@ import {
   Palette,
   ShieldCheck,
   Bell,
-  Power,
-  Calendar,
   Star,
 } from 'lucide-react-native';
 
 export function ProfileScreen() {
   const { user, logout, updateProfile } = useAuthStore();
   const { colors: themeColors, isDark } = useTheme();
-  const bottomSpace = useBottomTabSpace(24);
+  const insets = useSafeAreaInsets();
+  const bottomSpace = useBottomTabSpace(28);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [storeName, setStoreName] = useState(user?.storeName || 'Toko Tani Makmur Fahda');
@@ -124,25 +123,6 @@ export function ProfileScreen() {
     );
   };
 
-  const handleStoreOpenToggle = (val: boolean) => {
-    if (!val) {
-      Alert.alert(
-        'Tutup Toko Sementara?',
-        'Saat toko ditutup, pembeli tidak dapat membuat pesanan baru hingga Anda mengaktifkannya kembali.',
-        [
-          { text: 'Batal', style: 'cancel' },
-          {
-            text: 'Tutup Toko',
-            style: 'destructive',
-            onPress: () => setStoreIsOpen(false),
-          },
-        ]
-      );
-    } else {
-      setStoreIsOpen(true);
-    }
-  };
-
   const handleLogout = () => {
     Alert.alert(
       'Konfirmasi Keluar',
@@ -160,16 +140,23 @@ export function ProfileScreen() {
     );
   };
 
-  const handleOpenEditModal = () => {
-    setName(user?.name || 'Fahda Febriya');
-    setStoreName(user?.storeName || 'Toko Tani Makmur Fahda');
-    setEmail(user?.email || 'fahda@petanitech.id');
-    setPhone(user?.phone || '0812-3456-7890');
-    setStoreAddress(
-      user?.storeAddress ||
-        'Jl. Raya Indramayu - Cirebon No. 88, Kec. Jatibarang, Kab. Indramayu, Jawa Barat 45214'
-    );
-    setIsEditModalOpen(true);
+  const handleStoreOpenToggle = (nextVal: boolean) => {
+    if (!nextVal) {
+      Alert.alert(
+        'Tutup Toko Sementara?',
+        'Saat toko ditutup, pembeli tidak dapat membuat pesanan baru hingga Anda mengaktifkannya kembali.',
+        [
+          { text: 'Batal', style: 'cancel' },
+          {
+            text: 'Tutup Toko',
+            style: 'destructive',
+            onPress: () => setStoreIsOpen(false),
+          },
+        ]
+      );
+    } else {
+      setStoreIsOpen(true);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -196,8 +183,8 @@ export function ProfileScreen() {
     }
   };
 
-  // Mask bank account number safely preserving real digits
-  const maskedAccountNumber = React.useMemo(() => {
+  // Mask bank account number safely matching Finance screen
+  const maskedAccountNumber = useMemo(() => {
     const raw = user?.bankAccount?.accountNumber?.trim();
     if (!raw) return '4321-01-••••••-53-2';
     const parts = raw.split('-');
@@ -212,15 +199,24 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: themeColors.background }]}
+      style={[styles.safeArea, { backgroundColor: isDark ? themeColors.background : '#FAF9F6' }]}
       edges={['top']}
     >
-      {/* Ambient Glow */}
+      {/* 1. Subtle Botanical Canvas Gradient (Matches Login/Register Source of Truth) */}
+      <LinearGradient
+        colors={themeColors.gradients.main}
+        locations={[0, 0.22, 0.55, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* 2. Soft Ambient Mint Orbs */}
       <View
         style={[
-          styles.ambientGlow,
+          styles.decorativeOrbTopRight,
           {
-            borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : 'rgba(64, 145, 108, 0.08)',
+            borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : 'rgba(64, 145, 108, 0.06)',
           },
         ]}
         pointerEvents="none"
@@ -228,8 +224,8 @@ export function ProfileScreen() {
         <LinearGradient
           colors={
             isDark
-              ? ['rgba(209, 245, 232, 0.16)', 'rgba(64, 145, 108, 0.04)', 'transparent']
-              : ['rgba(209, 245, 232, 0.45)', 'rgba(255, 255, 255, 0.15)', 'transparent']
+              ? ['rgba(209, 245, 232, 0.18)', 'rgba(64, 145, 108, 0.04)', 'transparent']
+              : ['rgba(209, 245, 232, 0.40)', 'rgba(255, 255, 255, 0.15)', 'transparent']
           }
           start={{ x: 0.2, y: 0.2 }}
           end={{ x: 1, y: 1 }}
@@ -237,510 +233,539 @@ export function ProfileScreen() {
         />
       </View>
 
-      {/* Screen Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
-            borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
-          },
-        ]}
-      >
+      <View style={styles.decorativeOrbMiddleLeft} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(236, 243, 158, 0.16)', 'rgba(144, 169, 85, 0.04)', 'transparent']
+              : ['rgba(236, 243, 158, 0.22)', 'rgba(209, 245, 232, 0.08)', 'transparent']
+          }
+          start={{ x: 0.3, y: 0.3 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
+      {/* 3. Screen Header */}
+      <FadeInUp delay={0}>
         <View
           style={[
-            styles.sheenLine,
+            styles.header,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.18)'
-                : 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
+              borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
             },
           ]}
-        />
-        <View style={styles.titleCol}>
-          <View style={styles.eyebrowRow}>
-            <View
-              style={[
-                styles.eyebrowDot,
-                { backgroundColor: isDark ? themeColors.mint : themeColors.primary },
-              ]}
-            />
-            <Text
-              style={[
-                styles.eyebrow,
-                { color: isDark ? themeColors.mint : themeColors.primary },
-              ]}
-            >
-              PROFIL & PENGATURAN TOKO
+        >
+          {/* Top Hairline Sheen Line */}
+          <View
+            style={[
+              styles.sheenLine,
+              {
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.18)'
+                  : 'rgba(255, 255, 255, 0.95)',
+              },
+            ]}
+          />
+          <View style={styles.titleCol}>
+            <View style={styles.eyebrowRow}>
+              <View
+                style={[
+                  styles.eyebrowDot,
+                  { backgroundColor: isDark ? themeColors.mint : themeColors.primary },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.eyebrow,
+                  { color: isDark ? themeColors.mint : themeColors.primary },
+                ]}
+              >
+                PENGATURAN & TOKO
+              </Text>
+            </View>
+            <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+              Profil & Pengaturan Toko
+            </Text>
+            <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              Kelola identitas toko, alamat gudang pengiriman, dan preferensi akun
             </Text>
           </View>
-          <Text style={[styles.screenTitle, { color: themeColors.textPrimary }]}>
-            Profil Seller
-          </Text>
-          <Text style={[styles.screenSubtitle, { color: themeColors.textSecondary }]}>
-            Identitas toko, alamat gudang, rekening pencairan, & sistem
-          </Text>
         </View>
-      </View>
+      </FadeInUp>
 
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]}
         showsVerticalScrollIndicator={false}
       >
         {/* 1. MAIN SELLER IDENTITY CARD */}
-        <Card
-          style={[
-            styles.identityCard,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-            },
-          ]}
-        >
-          {/* Header Row: Avatar + Main Details */}
-          <View style={styles.identityHeader}>
-            <View style={styles.avatarContainer}>
-              <Image
-                source={{
-                  uri:
-                    user?.avatar ||
-                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-                }}
-                style={[
-                  styles.avatar,
-                  {
-                    borderColor: isDark ? themeColors.mint : themeColors.primary,
-                  },
-                ]}
-              />
-              <TouchableOpacity
-                onPress={handleAvatarPress}
-                style={[
-                  styles.cameraBtn,
-                  {
-                    backgroundColor: isDark ? '#183D2A' : themeColors.primary,
-                    borderColor: isDark ? themeColors.mint : '#FFFFFF',
-                  },
-                ]}
-                activeOpacity={0.8}
-                accessibilityLabel="Ganti foto profil toko"
-              >
-                <Camera size={13} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.identityDetails}>
-              <Text
-                style={[styles.storeNameText, { color: themeColors.textPrimary }]}
-                numberOfLines={1}
-              >
-                {user?.storeName || 'Toko Tani Makmur Fahda'}
-              </Text>
-
-              <View style={styles.badgeLine}>
-                <Badge variant="brand" size="sm" dot>
-                  {user?.status || 'Seller Terverifikasi'}
-                </Badge>
-                <Text style={[styles.storeIdText, { color: themeColors.textMuted }]}>
-                  ID: {user?.storeId || 'ID-AGRO-INDRAMAYU-01'}
-                </Text>
-              </View>
-
-              <Text style={[styles.ownerText, { color: themeColors.textSecondary }]}>
-                Pemilik:{' '}
-                <Text style={[styles.ownerNameText, { color: themeColors.textPrimary }]}>
-                  {user?.name || 'Fahda Febriya'}
-                </Text>
-              </Text>
-            </View>
-          </View>
-
-          {/* Metadata & Rating Row */}
-          <View
+        <FadeInUp delay={50}>
+          <Card
+            sheen
+            variant="elevated"
             style={[
-              styles.metaPillsRow,
+              styles.profileCard,
               {
-                backgroundColor: isDark ? 'rgba(11, 32, 20, 0.65)' : '#FAF9F6',
-                borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EDF2EE',
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
               },
             ]}
           >
-            <View style={styles.metaPill}>
-              <Star size={13} color="#D97706" fill="#D97706" />
-              <Text style={[styles.metaPillText, { color: themeColors.textPrimary }]}>
-                {user?.rating || 4.95} ({user?.totalReview || 1280} Ulasan)
-              </Text>
+            <View style={styles.profileHeader}>
+              {/* Avatar & Camera Action */}
+              <View style={styles.avatarContainer}>
+                <Image
+                  source={{
+                    uri:
+                      user?.avatar ||
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+                  }}
+                  style={[
+                    styles.avatar,
+                    {
+                      borderColor: isDark ? 'rgba(209, 245, 232, 0.4)' : themeColors.primary,
+                    },
+                  ]}
+                />
+                <PressableScale
+                  onPress={handleAvatarPress}
+                  style={[
+                    styles.cameraBtn,
+                    {
+                      backgroundColor: themeColors.primary,
+                      borderColor: isDark ? '#163A26' : '#FFFFFF',
+                    },
+                  ]}
+                  accessibilityLabel="Ganti foto profil toko"
+                >
+                  <Camera size={13} color="#FFFFFF" />
+                </PressableScale>
+              </View>
+
+              {/* Store Identification Details */}
+              <View style={styles.profileDetails}>
+                <Text
+                  style={[styles.storeName, { color: isDark ? '#FFFFFF' : '#183326' }]}
+                  numberOfLines={1}
+                >
+                  {user?.storeName || 'Toko Tani Makmur Fahda'}
+                </Text>
+
+                <View style={styles.badgeLine}>
+                  <Badge variant="brand" size="sm" dot>
+                    {user?.status || 'Seller Terverifikasi'}
+                  </Badge>
+                  <Text style={[styles.storeIdText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                    ID: {user?.storeId || 'ID-AGRO-INDRAMAYU-01'}
+                  </Text>
+                </View>
+
+                <Text style={[styles.ownerText, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                  Pemilik:{' '}
+                  <Text style={[styles.ownerNameText, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                    {user?.name || 'Fahda Febriya'}
+                  </Text>
+                </Text>
+
+                <View style={styles.tagRow}>
+                  <View
+                    style={[
+                      styles.ratingBadge,
+                      {
+                        backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : '#FFFBEB',
+                        borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#FDE68A',
+                      },
+                    ]}
+                  >
+                    <Star size={11} color="#D97706" fill="#D97706" />
+                    <Text style={styles.ratingText}>
+                      {user?.rating || 4.95} ({(user?.totalReview || 1280).toLocaleString('id-ID')} Ulasan)
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.locationBadge,
+                      {
+                        backgroundColor: isDark ? 'rgba(64, 145, 108, 0.18)' : '#F2FBF5',
+                        borderColor: isDark ? 'rgba(209, 245, 232, 0.22)' : '#DDE8E0',
+                      },
+                    ]}
+                  >
+                    <MapPin size={11} color={isDark ? themeColors.mint : themeColors.primary} />
+                    <Text
+                      style={[
+                        styles.cityText,
+                        { color: isDark ? themeColors.mint : themeColors.primaryDark },
+                      ]}
+                    >
+                      Indramayu, Jawa Barat
+                    </Text>
+                  </View>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.metaDivider} />
-
-            <View style={styles.metaPill}>
-              <MapPin size={13} color={isDark ? themeColors.mint : themeColors.primary} />
-              <Text style={[styles.metaPillText, { color: themeColors.textSecondary }]}>
-                Indramayu, Jabar
-              </Text>
-            </View>
-
-            <View style={styles.metaDivider} />
-
-            <View style={styles.metaPill}>
-              <Calendar size={13} color={themeColors.textMuted} />
-              <Text style={[styles.metaPillText, { color: themeColors.textMuted }]}>
-                Mitra {user?.joinedDate || 'Jan 2024'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Action Button: Edit Store Info */}
-          <Button
-            variant="outline"
-            size="md"
-            leftIcon={<Edit3 size={15} color={isDark ? themeColors.mint : themeColors.primaryDark} />}
-            onPress={handleOpenEditModal}
-            style={styles.editProfileBtn}
-          >
-            Ubah Informasi Toko & Kontak
-          </Button>
-        </Card>
+            {/* Edit Store Action */}
+            <Button
+              variant="outline"
+              size="md"
+              leftIcon={<Edit3 size={15} color={isDark ? themeColors.mint : themeColors.primaryDark} />}
+              onPress={() => {
+                setName(user?.name || 'Fahda Febriya');
+                setStoreName(user?.storeName || 'Toko Tani Makmur Fahda');
+                setEmail(user?.email || 'fahda@petanitech.id');
+                setPhone(user?.phone || '0812-3456-7890');
+                setStoreAddress(
+                  user?.storeAddress ||
+                    'Jl. Raya Indramayu - Cirebon No. 88, Kec. Jatibarang, Kab. Indramayu, Jawa Barat 45214'
+                );
+                setIsEditModalOpen(true);
+              }}
+              style={styles.editProfileBtn}
+            >
+              Ubah Informasi Toko & Kontak
+            </Button>
+          </Card>
+        </FadeInUp>
 
         {/* 2. CONTACT & WAREHOUSE INFORMATION */}
-        <Card
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-            },
-          ]}
-        >
-          <View style={styles.sectionHeaderRow}>
-            <User size={15} color={isDark ? themeColors.mint : themeColors.primary} />
-            <Text style={[styles.sectionHeading, { color: themeColors.textSecondary }]}>
-              INFORMASI KONTAK & GUDANG
-            </Text>
-          </View>
-
-          {/* Row 1: Owner Name */}
-          <View style={styles.infoRow}>
-            <View
-              style={[
-                styles.infoIconBox,
-                {
-                  backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE',
-                },
-              ]}
-            >
-              <User size={17} color={isDark ? themeColors.mint : themeColors.primary} />
-            </View>
-            <View style={styles.infoTextBox}>
-              <Text style={[styles.infoLabel, { color: themeColors.textMuted }]}>
-                Nama Pemilik Usaha
-              </Text>
-              <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
-                {user?.name || 'Fahda Febriya'}
+        <FadeInUp delay={90}>
+          <Card
+            sheen
+            variant="elevated"
+            style={[
+              styles.sectionCard,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+              },
+            ]}
+          >
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionHeading, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                INFORMASI KONTAK & GUDANG
               </Text>
             </View>
-          </View>
 
-          <View style={[styles.rowDivider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.10)' : '#F0F5F1' }]} />
-
-          {/* Row 2: Official Email */}
-          <View style={styles.infoRow}>
-            <View
-              style={[
-                styles.infoIconBox,
-                {
-                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.22)' : '#EFF6FF',
-                },
-              ]}
-            >
-              <Mail size={17} color="#3B82F6" />
-            </View>
-            <View style={styles.infoTextBox}>
-              <Text style={[styles.infoLabel, { color: themeColors.textMuted }]}>
-                Email Resmi Toko
-              </Text>
-              <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
-                {user?.email || 'fahda@petanitech.id'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.rowDivider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.10)' : '#F0F5F1' }]} />
-
-          {/* Row 3: WhatsApp / Phone */}
-          <View style={styles.infoRow}>
-            <View
-              style={[
-                styles.infoIconBox,
-                {
-                  backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE',
-                },
-              ]}
-            >
-              <Phone size={17} color={isDark ? themeColors.mint : themeColors.primary} />
-            </View>
-            <View style={styles.infoTextBox}>
-              <Text style={[styles.infoLabel, { color: themeColors.textMuted }]}>
-                Nomor WhatsApp / Kontak Toko
-              </Text>
-              <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
-                {user?.phone || '0812-3456-7890'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.rowDivider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.10)' : '#F0F5F1' }]} />
-
-          {/* Row 4: Shipping Origin Address */}
-          <View style={styles.infoRow}>
-            <View
-              style={[
-                styles.infoIconBox,
-                {
-                  backgroundColor: isDark ? 'rgba(245, 158, 11, 0.22)' : '#FFFBEB',
-                },
-              ]}
-            >
-              <MapPin size={17} color="#F59E0B" />
-            </View>
-            <View style={styles.infoTextBox}>
-              <Text style={[styles.infoLabel, { color: themeColors.textMuted }]}>
-                Alamat Gudang Asal Pengiriman
-              </Text>
-              <Text style={[styles.infoValueAddress, { color: themeColors.textPrimary }]}>
-                {user?.storeAddress ||
-                  'Jl. Raya Indramayu - Cirebon No. 88, Kec. Jatibarang, Kab. Indramayu, Jawa Barat 45214'}
-              </Text>
-            </View>
-          </View>
-        </Card>
-
-        {/* 3. PAYOUT ACCOUNT (Aligned with Finance Screen) */}
-        <Card
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-            },
-          ]}
-        >
-          {/* Header Row */}
-          <View style={styles.payoutHeaderRow}>
-            <View style={styles.payoutTitleWrap}>
+            {/* Owner Row */}
+            <View style={styles.infoRow}>
               <View
                 style={[
-                  styles.payoutIconCircle,
+                  styles.infoIconBox,
                   {
                     backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE',
                   },
                 ]}
               >
-                <Building2 size={17} color={isDark ? themeColors.mint : themeColors.primary} />
+                <User size={17} color={isDark ? themeColors.mint : themeColors.primary} />
               </View>
-              <View style={styles.payoutTitleCol}>
-                <Text style={[styles.payoutHeaderTitle, { color: themeColors.textPrimary }]}>
-                  Rekening Pencairan Terdaftar
+              <View style={styles.infoTextBox}>
+                <Text style={[styles.infoLabel, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Nama Pemilik Toko
                 </Text>
-                <Text style={[styles.payoutHeaderSub, { color: themeColors.textMuted }]}>
-                  Pencairan instan tanpa biaya admin
+                <Text style={[styles.infoValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.name || 'Fahda Febriya'}
                 </Text>
               </View>
             </View>
 
-            <Badge variant="brand" size="sm" dot>
-              Terverifikasi
-            </Badge>
-          </View>
+            <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.08)' : '#EFF4F0' }]} />
 
-          {/* Account Details Box */}
-          <View
+            {/* Email Row */}
+            <View style={styles.infoRow}>
+              <View
+                style={[
+                  styles.infoIconBox,
+                  {
+                    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.22)' : '#EFF6FF',
+                  },
+                ]}
+              >
+                <Mail size={17} color="#3B82F6" />
+              </View>
+              <View style={styles.infoTextBox}>
+                <Text style={[styles.infoLabel, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Email Resmi Toko
+                </Text>
+                <Text style={[styles.infoValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.email || 'fahda@petanitech.id'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.08)' : '#EFF4F0' }]} />
+
+            {/* Phone Row */}
+            <View style={styles.infoRow}>
+              <View
+                style={[
+                  styles.infoIconBox,
+                  {
+                    backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE',
+                  },
+                ]}
+              >
+                <Phone size={17} color={isDark ? themeColors.mint : themeColors.primary} />
+              </View>
+              <View style={styles.infoTextBox}>
+                <Text style={[styles.infoLabel, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Nomor WhatsApp / Kontak
+                </Text>
+                <Text style={[styles.infoValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.phone || '0812-3456-7890'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.08)' : '#EFF4F0' }]} />
+
+            {/* Warehouse Address Row */}
+            <View style={styles.infoRow}>
+              <View
+                style={[
+                  styles.infoIconBox,
+                  {
+                    backgroundColor: isDark ? 'rgba(245, 158, 11, 0.22)' : '#FFFBEB',
+                  },
+                ]}
+              >
+                <MapPin size={17} color="#F59E0B" />
+              </View>
+              <View style={styles.infoTextBox}>
+                <Text style={[styles.infoLabel, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Alamat Gudang Asal Pengiriman
+                </Text>
+                <Text
+                  style={[
+                    styles.infoValue,
+                    styles.addressValue,
+                    { color: isDark ? '#FFFFFF' : '#183326' },
+                  ]}
+                >
+                  {user?.storeAddress ||
+                    'Jl. Raya Indramayu - Cirebon No. 88, Kec. Jatibarang, Kab. Indramayu, Jawa Barat 45214'}
+                </Text>
+              </View>
+            </View>
+          </Card>
+        </FadeInUp>
+
+        {/* 3. PAYOUT ACCOUNT (Aligned with Finance Screen) */}
+        <FadeInUp delay={130}>
+          <Card
+            sheen
+            variant="elevated"
             style={[
-              styles.payoutDetailBox,
+              styles.sectionCard,
               {
-                backgroundColor: isDark ? 'rgba(11, 32, 20, 0.65)' : '#FAF9F6',
-                borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EDF2EE',
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
               },
             ]}
           >
-            <View style={styles.payoutBankRow}>
-              <Text style={[styles.payoutBankName, { color: themeColors.textPrimary }]}>
-                {user?.bankAccount?.bankName || 'Bank Rakyat Indonesia (BRI)'}
-              </Text>
-              <Text style={[styles.payoutAccountNumber, { color: themeColors.textSecondary }]}>
-                {maskedAccountNumber}
-              </Text>
+            {/* Header Row */}
+            <View style={styles.payoutHeaderRow}>
+              <View style={styles.payoutTitleWrap}>
+                <View
+                  style={[
+                    styles.payoutIconCircle,
+                    {
+                      backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE',
+                    },
+                  ]}
+                >
+                  <Building2 size={17} color={isDark ? themeColors.mint : themeColors.primary} />
+                </View>
+                <View style={styles.payoutTitleCol}>
+                  <Text style={[styles.payoutHeaderTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                    Rekening Pencairan Terdaftar
+                  </Text>
+                  <Text style={[styles.payoutHeaderSub, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                    Pencairan instan tanpa biaya admin
+                  </Text>
+                </View>
+              </View>
+
+              <Badge variant="brand" size="sm" dot>
+                Terverifikasi
+              </Badge>
             </View>
 
-            <View style={styles.payoutHolderRow}>
-              <Text style={[styles.payoutHolderLabel, { color: themeColors.textMuted }]}>
-                Atas Nama:
-              </Text>
-              <Text style={[styles.payoutHolderName, { color: themeColors.textPrimary }]}>
-                {user?.bankAccount?.accountHolder || user?.name || 'Mitra Petani Terdaftar'}
+            {/* Account Detail Box */}
+            <View
+              style={[
+                styles.payoutDetailBox,
+                {
+                  backgroundColor: isDark ? 'rgba(11, 32, 20, 0.65)' : '#FAF9F6',
+                  borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EDF2EE',
+                },
+              ]}
+            >
+              <View style={styles.payoutBankRow}>
+                <Text style={[styles.payoutBankName, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.bankAccount?.bankName || 'Bank Rakyat Indonesia (BRI)'}
+                </Text>
+                <Text style={[styles.payoutAccountNumber, { color: isDark ? '#D1F5E8' : '#2D6A4F' }]}>
+                  {maskedAccountNumber}
+                </Text>
+              </View>
+
+              <View style={styles.payoutHolderRow}>
+                <Text style={[styles.payoutHolderLabel, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Atas Nama:
+                </Text>
+                <Text style={[styles.payoutHolderName, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.bankAccount?.accountHolder || user?.name || 'Mitra Petani Terdaftar'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Security Guarantee Note */}
+            <View style={styles.payoutSecurityRow}>
+              <ShieldCheck size={13} color={isDark ? themeColors.mint : '#40916C'} />
+              <Text style={[styles.payoutSecurityText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                Dilindungi verifikasi biometrik & notifikasi mutasi otomatis
               </Text>
             </View>
-          </View>
-
-          {/* Security Guarantee Note */}
-          <View style={styles.payoutSecurityRow}>
-            <ShieldCheck size={13} color={isDark ? themeColors.mint : '#40916C'} />
-            <Text style={[styles.payoutSecurityText, { color: themeColors.textMuted }]}>
-              Dilindungi verifikasi biometrik & notifikasi mutasi otomatis
-            </Text>
-          </View>
-        </Card>
+          </Card>
+        </FadeInUp>
 
         {/* 4. THEME & DISPLAY PREFERENCES */}
-        <Card
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-            },
-          ]}
-        >
-          <View style={styles.sectionHeaderRow}>
-            <Palette size={15} color={isDark ? themeColors.mint : themeColors.primary} />
-            <Text style={[styles.sectionHeading, { color: themeColors.textSecondary }]}>
-              PENGATURAN TEMA & TAMPILAN
-            </Text>
-          </View>
+        <FadeInUp delay={170}>
+          <Card
+            sheen
+            variant="elevated"
+            style={[
+              styles.sectionCard,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+              },
+            ]}
+          >
+            <View style={styles.sectionTitleRow}>
+              <View
+                style={[
+                  styles.sectionIconWrap,
+                  { backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE' },
+                ]}
+              >
+                <Palette size={16} color={isDark ? themeColors.mint : themeColors.primary} />
+              </View>
+              <View style={styles.sectionHeaderCol}>
+                <Text style={[styles.sectionHeading, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                  PENGATURAN TEMA & TAMPILAN
+                </Text>
+                <Text style={[styles.sectionSubheading, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Sesuaikan preferensi visual tema aplikasi sesuai kenyamanan Anda
+                </Text>
+              </View>
+            </View>
 
-          <ThemeSelector />
-        </Card>
+            <ThemeSelector />
+          </Card>
+        </FadeInUp>
 
         {/* 5. OPERATIONAL SETTINGS */}
-        <Card
-          style={[
-            styles.sectionCard,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-            },
-          ]}
-        >
-          <View style={styles.sectionHeaderRow}>
-            <Power size={15} color={isDark ? themeColors.mint : themeColors.primary} />
-            <Text style={[styles.sectionHeading, { color: themeColors.textSecondary }]}>
-              PENGATURAN OPERASIONAL TOKO
-            </Text>
-          </View>
+        <FadeInUp delay={210}>
+          <Card
+            sheen
+            variant="elevated"
+            style={[
+              styles.sectionCard,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+              },
+            ]}
+          >
+            <View style={styles.sectionTitleRow}>
+              <View
+                style={[
+                  styles.sectionIconWrap,
+                  { backgroundColor: isDark ? 'rgba(64, 145, 108, 0.22)' : '#EAF4EE' },
+                ]}
+              >
+                <Store size={16} color={isDark ? themeColors.mint : themeColors.primary} />
+              </View>
+              <View style={styles.sectionHeaderCol}>
+                <Text style={[styles.sectionHeading, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                  PENGATURAN OPERASIONAL TOKO
+                </Text>
+                <Text style={[styles.sectionSubheading, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Kontrol ketersediaan toko dan penerimaan notifikasi pesanan
+                </Text>
+              </View>
+            </View>
 
-          {/* Switch 1: Store Open / Accepting Orders */}
-          <View style={styles.switchRow}>
-            <View
-              style={[
-                styles.switchIconBox,
-                {
-                  backgroundColor: storeIsOpen
-                    ? isDark
-                      ? 'rgba(64, 145, 108, 0.22)'
-                      : '#EAF4EE'
-                    : isDark
-                    ? 'rgba(239, 68, 68, 0.15)'
-                    : '#FEF2F2',
-                },
-              ]}
-            >
-              <Store
-                size={17}
-                color={
-                  storeIsOpen
-                    ? isDark
-                      ? themeColors.mint
-                      : themeColors.primary
-                    : '#EF4444'
-                }
+            {/* Switch 1: Status Toko Aktif */}
+            <View style={[styles.switchRow, { borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.08)' : '#EFF4F0' }]}>
+              <View style={styles.switchTextCol}>
+                <View style={styles.switchLabelRow}>
+                  <Text style={[styles.switchTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                    Status Toko Buka & Menerima Pesanan
+                  </Text>
+                  <View
+                    style={[
+                      styles.storeStatusDot,
+                      { backgroundColor: storeIsOpen ? '#10B981' : '#94A3B8' },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.switchSub, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  {storeIsOpen
+                    ? 'Toko aktif. Pembeli dapat memesan seluruh produk yang tersedia'
+                    : 'Toko libur. Pembeli tidak dapat membuat checkout pesanan baru'}
+                </Text>
+              </View>
+              <Switch
+                value={storeIsOpen}
+                onValueChange={handleStoreOpenToggle}
+                trackColor={{ false: '#CBD5E1', true: '#A7C8A9' }}
+                thumbColor={storeIsOpen ? themeColors.primary : '#F1F5F9'}
               />
             </View>
-            <View style={styles.switchTextCol}>
-              <Text style={[styles.switchTitle, { color: themeColors.textPrimary }]}>
-                Status Toko Buka Menerima Pesanan
-              </Text>
-              <Text style={[styles.switchSub, { color: themeColors.textMuted }]}>
-                {storeIsOpen
-                  ? 'Toko aktif menerima pesanan dari pembeli.'
-                  : 'Toko libur sementara. Pembeli tidak dapat memesan.'}
-              </Text>
-            </View>
-            <Switch
-              value={storeIsOpen}
-              onValueChange={handleStoreOpenToggle}
-              trackColor={{
-                false: isDark ? '#334155' : '#CBD5E1',
-                true: isDark ? '#2D6A4F' : '#A7C8A9',
-              }}
-              thumbColor={storeIsOpen ? (isDark ? themeColors.mint : themeColors.primary) : '#F1F5F9'}
-            />
-          </View>
 
-          <View style={[styles.rowDivider, { backgroundColor: isDark ? 'rgba(209, 245, 232, 0.10)' : '#F0F5F1' }]} />
-
-          {/* Switch 2: Order & Chat Notifications */}
-          <View style={styles.switchRow}>
-            <View
-              style={[
-                styles.switchIconBox,
-                {
-                  backgroundColor: notificationsEnabled
-                    ? isDark
-                      ? 'rgba(64, 145, 108, 0.22)'
-                      : '#EAF4EE'
-                    : isDark
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : '#F1F5F9',
-                },
-              ]}
-            >
-              <Bell
-                size={17}
-                color={
-                  notificationsEnabled
-                    ? isDark
-                      ? themeColors.mint
-                      : themeColors.primary
-                    : themeColors.textMuted
-                }
+            {/* Switch 2: Notifikasi Pesanan & Chat */}
+            <View style={styles.switchRow}>
+              <View style={styles.switchTextCol}>
+                <View style={styles.switchLabelRow}>
+                  <Bell size={14} color={notificationsEnabled ? (isDark ? themeColors.mint : themeColors.primary) : (isDark ? '#8BA899' : '#7E9180')} />
+                  <Text style={[styles.switchTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                    Notifikasi Pesanan & Chat Baru
+                  </Text>
+                </View>
+                <Text style={[styles.switchSub, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Dapatkan notifikasi seketika saat ada pesanan baru atau pesan dari pembeli
+                </Text>
+              </View>
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
+                trackColor={{ false: '#CBD5E1', true: '#A7C8A9' }}
+                thumbColor={notificationsEnabled ? themeColors.primary : '#F1F5F9'}
               />
             </View>
-            <View style={styles.switchTextCol}>
-              <Text style={[styles.switchTitle, { color: themeColors.textPrimary }]}>
-                Notifikasi Pesanan & Chat Baru
-              </Text>
-              <Text style={[styles.switchSub, { color: themeColors.textMuted }]}>
-                Dapatkan notifikasi seketika saat pembeli memesan produk
-              </Text>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{
-                false: isDark ? '#334155' : '#CBD5E1',
-                true: isDark ? '#2D6A4F' : '#A7C8A9',
-              }}
-              thumbColor={notificationsEnabled ? (isDark ? themeColors.mint : themeColors.primary) : '#F1F5F9'}
-            />
-          </View>
-        </Card>
+          </Card>
+        </FadeInUp>
 
         {/* 6. LOGOUT BUTTON */}
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={[
-            styles.logoutBtn,
-            {
-              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FFF1F2',
-              borderColor: isDark ? 'rgba(239, 68, 68, 0.25)' : '#FECDD3',
-            },
-          ]}
-          activeOpacity={0.8}
-        >
-          <LogOut size={17} color="#EF4444" />
-          <Text style={styles.logoutText}>Keluar dari Akun Seller</Text>
-        </TouchableOpacity>
+        <FadeInUp delay={250}>
+          <PressableScale
+            onPress={handleLogout}
+            style={[
+              styles.logoutBtn,
+              {
+                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.14)' : '#FFF1F2',
+                borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : '#FECDD3',
+              },
+            ]}
+          >
+            <LogOut size={17} color="#EF4444" />
+            <Text style={styles.logoutText}>Keluar dari Akun Seller</Text>
+          </PressableScale>
+        </FadeInUp>
       </ScrollView>
 
       {/* 7. MODAL EDIT INFORMASI TOKO */}
@@ -758,7 +783,7 @@ export function ProfileScreen() {
               styles.modalContent,
               {
                 backgroundColor: isDark ? '#163A26' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(209, 245, 232, 0.22)' : '#DDE8E0',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.20)' : '#DDE8E0',
               },
             ]}
           >
@@ -766,35 +791,37 @@ export function ProfileScreen() {
             <View
               style={[
                 styles.modalHeader,
-                { borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#F0F5F1' },
+                { borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EFF4F0' },
               ]}
             >
-              <View style={styles.modalTitleCol}>
-                <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>
+              <View style={styles.modalHeaderTitleCol}>
+                <Text style={[styles.modalTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
                   Ubah Informasi Toko
                 </Text>
-                <Text style={[styles.modalSubtitle, { color: themeColors.textSecondary }]}>
-                  Perbarui identitas pemilik, toko, dan gudang pengiriman
+                <Text style={[styles.modalSub, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                  Perbarui identitas toko dan alamat gudang pengiriman
                 </Text>
               </View>
-
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => setIsEditModalOpen(false)}
                 disabled={isSaving}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={[
                   styles.modalCloseBtn,
-                  {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#F2FBF5',
-                  },
+                  { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#F2FBF5' },
                 ]}
+                accessibilityLabel="Tutup modal edit profil"
               >
-                <X size={18} color={themeColors.textSecondary} />
-              </TouchableOpacity>
+                <X size={18} color={isDark ? '#D1F5E8' : '#64746A'} />
+              </PressableScale>
             </View>
 
+            {/* Modal Form Scroll */}
             <ScrollView
-              contentContainerStyle={styles.modalScroll}
+              contentContainerStyle={[
+                styles.modalScroll,
+                { paddingBottom: Math.max(insets.bottom, 24) },
+              ]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -802,7 +829,7 @@ export function ProfileScreen() {
                 label="Nama Pemilik Toko"
                 value={name}
                 onChangeText={setName}
-                leftIcon={<User size={18} color={isDark ? themeColors.mint : themeColors.textMuted} />}
+                leftIcon={<User size={18} color={isDark ? '#8BA899' : '#7E9180'} />}
                 required
               />
 
@@ -810,7 +837,7 @@ export function ProfileScreen() {
                 label="Nama Toko"
                 value={storeName}
                 onChangeText={setStoreName}
-                leftIcon={<Store size={18} color={isDark ? themeColors.mint : themeColors.textMuted} />}
+                leftIcon={<Store size={18} color={isDark ? '#8BA899' : '#7E9180'} />}
                 required
               />
 
@@ -818,17 +845,17 @@ export function ProfileScreen() {
                 label="Email Resmi"
                 value={email}
                 onChangeText={setEmail}
-                leftIcon={<Mail size={18} color={isDark ? themeColors.mint : themeColors.textMuted} />}
+                leftIcon={<Mail size={18} color={isDark ? '#8BA899' : '#7E9180'} />}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 required
               />
 
               <Input
-                label="Nomor WhatsApp"
+                label="Nomor WhatsApp / Kontak"
                 value={phone}
                 onChangeText={setPhone}
-                leftIcon={<Phone size={18} color={isDark ? themeColors.mint : themeColors.textMuted} />}
+                leftIcon={<Phone size={18} color={isDark ? '#8BA899' : '#7E9180'} />}
                 keyboardType="phone-pad"
                 required
               />
@@ -837,11 +864,12 @@ export function ProfileScreen() {
                 label="Alamat Lengkap Gudang (Indramayu)"
                 value={storeAddress}
                 onChangeText={setStoreAddress}
-                leftIcon={<MapPin size={18} color={isDark ? themeColors.mint : themeColors.textMuted} />}
+                leftIcon={<MapPin size={18} color={isDark ? '#8BA899' : '#7E9180'} />}
                 multiline
                 required
               />
 
+              {/* Modal Actions */}
               <View style={styles.modalActions}>
                 <Button
                   variant="outline"
@@ -874,21 +902,32 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  ambientGlow: {
+  decorativeOrbTopRight: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
+    top: -80,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  decorativeOrbMiddleLeft: {
+    position: 'absolute',
+    top: 360,
+    left: -80,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
     overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 14,
     borderBottomWidth: 1,
     position: 'relative',
+    overflow: 'hidden',
   },
   sheenLine: {
     position: 'absolute',
@@ -927,17 +966,23 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    gap: 14,
+    gap: 16,
   },
 
-  // 1. Identity Card
-  identityCard: {
+  // 1. Profile Card
+  profileCard: {
     padding: 18,
     borderRadius: 22,
-    borderWidth: 1,
-    gap: 14,
+    gap: 16,
+    borderWidth: 1.5,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  identityHeader: {
+  profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
@@ -961,17 +1006,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 2,
   },
-  identityDetails: {
+  profileDetails: {
     flex: 1,
     gap: 4,
   },
-  storeNameText: {
+  storeName: {
     fontSize: 17,
     fontFamily: typography.fontFamily.extrabold,
     letterSpacing: -0.3,
@@ -980,7 +1025,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    flexWrap: 'wrap',
+    marginTop: 1,
   },
   storeIdText: {
     fontSize: 10.5,
@@ -989,56 +1034,91 @@ const styles = StyleSheet.create({
   ownerText: {
     fontSize: 11.5,
     fontFamily: typography.fontFamily.regular,
+    marginTop: 1,
   },
   ownerNameText: {
     fontFamily: typography.fontFamily.bold,
   },
-  metaPillsRow: {
+  tagRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
+    gap: 6,
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
-    borderRadius: 14,
+    paddingVertical: 3,
+    borderRadius: 8,
     borderWidth: 1,
   },
-  metaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  metaPillText: {
-    fontSize: 11,
+  ratingText: {
+    fontSize: 10.5,
+    color: '#D97706',
     fontFamily: typography.fontFamily.semibold,
   },
-  metaDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: 'rgba(128, 128, 128, 0.2)',
+  locationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  cityText: {
+    fontSize: 10.5,
+    fontFamily: typography.fontFamily.semibold,
   },
   editProfileBtn: {
     marginTop: 2,
   },
 
-  // Section Cards Generic
+  // 2. Sections
   sectionCard: {
     padding: 16,
     borderRadius: 20,
-    borderWidth: 1,
     gap: 12,
+    borderWidth: 1.5,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    overflow: 'hidden',
   },
   sectionHeaderRow: {
+    marginBottom: 2,
+  },
+  sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 10,
+    marginBottom: 4,
+  },
+  sectionIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionHeaderCol: {
+    flex: 1,
+    gap: 1,
   },
   sectionHeading: {
     fontSize: 11.5,
     fontFamily: typography.fontFamily.bold,
     letterSpacing: 0.6,
   },
-
-  // 2. Contact & Warehouse
+  sectionSubheading: {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.regular,
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1060,20 +1140,18 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.regular,
   },
   infoValue: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: typography.fontFamily.semibold,
   },
-  infoValueAddress: {
-    fontSize: 12.5,
-    fontFamily: typography.fontFamily.medium,
-    lineHeight: 17,
+  addressValue: {
+    lineHeight: 18,
   },
-  rowDivider: {
+  divider: {
     height: 1,
-    marginVertical: 1,
+    marginVertical: 2,
   },
 
-  // 3. Payout Account
+  // 3. Payout Card
   payoutHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1151,28 +1229,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // 5. Operational Switches
+  // 4. Switches
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
-    paddingVertical: 2,
-  },
-  switchIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
   },
   switchTextCol: {
     flex: 1,
     gap: 2,
   },
+  switchLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   switchTitle: {
     fontSize: 12.5,
-    fontFamily: typography.fontFamily.bold,
-    letterSpacing: -0.2,
+    fontFamily: typography.fontFamily.semibold,
+  },
+  storeStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   switchSub: {
     fontSize: 11,
@@ -1180,7 +1262,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
 
-  // 6. Logout Button
+  // 5. Logout
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1189,7 +1271,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 18,
     paddingVertical: 14,
-    marginTop: 4,
+    paddingHorizontal: 16,
+    marginTop: 2,
   },
   logoutText: {
     color: '#EF4444',
@@ -1197,29 +1280,28 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
   },
 
-  // 7. Modal
+  // 6. Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(24, 51, 38, 0.55)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    padding: 20,
-    borderWidth: 1,
-    borderBottomWidth: 0,
+    padding: 22,
     maxHeight: '90%',
+    borderTopWidth: 1,
   },
   modalHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 14,
+    marginBottom: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    gap: 10,
   },
-  modalTitleCol: {
+  modalHeaderTitleCol: {
     flex: 1,
     gap: 2,
   },
@@ -1228,7 +1310,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.extrabold,
     letterSpacing: -0.3,
   },
-  modalSubtitle: {
+  modalSub: {
     fontSize: 11.5,
     fontFamily: typography.fontFamily.regular,
   },
@@ -1241,8 +1323,7 @@ const styles = StyleSheet.create({
   },
   modalScroll: {
     gap: 14,
-    paddingVertical: 14,
-    paddingBottom: 28,
+    paddingBottom: 24,
   },
   modalActions: {
     flexDirection: 'row',

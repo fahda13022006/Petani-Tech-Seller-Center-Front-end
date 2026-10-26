@@ -82,7 +82,11 @@ export const FinancialCard: React.FC<FinancialCardProps> = ({
     >
       {isGradient ? (
         <LinearGradient
-          colors={['#1E4A32', '#31572C', '#40916C']}
+          colors={
+            isDark
+              ? ['#143526', '#1D4533', '#275B44']
+              : ['#225A41', '#2D6E50', '#3D8C67']
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}

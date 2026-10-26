@@ -17,6 +17,8 @@ import { Badge } from '@/components/common/Badge';
 import { formatRupiah, formatNumber } from '@/constants';
 import { colors } from '@/theme/colors';
 import { useTheme } from '@/theme';
+import { useBottomTabSpace } from '@/navigation/hooks';
+import { FadeInUp } from '@/components/common/Motion';
 import {
   Users,
   TrendingUp,
@@ -27,6 +29,7 @@ import {
 
 export function AnalyticsScreen() {
   const { themeColors, isDarkMode } = useTheme();
+  const bottomSpace = useBottomTabSpace(28);
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [metricView, setMetricView] = useState<'revenue' | 'orders'>('revenue');
@@ -78,95 +81,102 @@ export function AnalyticsScreen() {
       </LinearGradient>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomSpace }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Timeframe Switcher */}
-        <View
-          style={[
-            styles.timeframeRow,
-            {
-              backgroundColor: themeColors.cardBackground,
-              borderColor: themeColors.cardBorder,
-            },
-          ]}
-        >
-          {(['daily', 'weekly', 'monthly'] as const).map((t) => (
-            <TouchableOpacity
-              key={t}
-              onPress={() => setTimeframe(t)}
-              style={[
-                styles.timeframeBtn,
-                timeframe === t && { backgroundColor: themeColors.primary },
-              ]}
-              activeOpacity={0.75}
-            >
-              <Text
+        <FadeInUp delay={40}>
+          <View
+            style={[
+              styles.timeframeRow,
+              {
+                backgroundColor: themeColors.cardBackground,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
+            {(['daily', 'weekly', 'monthly'] as const).map((t) => (
+              <TouchableOpacity
+                key={t}
+                onPress={() => setTimeframe(t)}
                 style={[
-                  styles.timeframeBtnText,
-                  { color: themeColors.textSecondary },
-                  timeframe === t && styles.timeframeBtnTextActive,
+                  styles.timeframeBtn,
+                  timeframe === t && { backgroundColor: themeColors.primary },
                 ]}
+                activeOpacity={0.75}
               >
-                {t === 'daily' ? 'Harian (7 Hari)' : t === 'weekly' ? 'Mingguan' : 'Bulanan'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.timeframeBtnText,
+                    { color: themeColors.textSecondary },
+                    timeframe === t && styles.timeframeBtnTextActive,
+                  ]}
+                >
+                  {t === 'daily' ? 'Harian (7 Hari)' : t === 'weekly' ? 'Mingguan' : 'Bulanan'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </FadeInUp>
 
         {/* 4 Summary Stat Cards */}
-        <View style={styles.statsRow}>
-          <StatCard
-            title="Total Pendapatan"
-            value={formatRupiah(data.summary.totalOrders * data.summary.averageOrderValue)}
-            icon={DollarSign}
-            iconBgColor={isDarkMode ? 'rgba(64,145,108,0.2)' : '#EAF4EE'}
-            iconColor={themeColors.accent}
-            trend={{ value: '+18.4%', isPositive: true }}
-            style={styles.statCardHalf}
-          />
-          <StatCard
-            title="Total Pesanan"
-            value={`${data.summary.totalOrders} Pesanan`}
-            icon={ShoppingCart}
-            iconBgColor={isDarkMode ? 'rgba(37,99,235,0.18)' : '#EFF6FF'}
-            iconColor="#3B82F6"
-            trend={{ value: '+12%', isPositive: true }}
-            style={styles.statCardHalf}
-          />
-        </View>
+        <FadeInUp delay={80}>
+          <View style={styles.statsRow}>
+            <StatCard
+              title="Total Pendapatan"
+              value={formatRupiah(data.summary.totalOrders * data.summary.averageOrderValue)}
+              icon={DollarSign}
+              iconBgColor={isDarkMode ? 'rgba(64,145,108,0.2)' : '#EAF4EE'}
+              iconColor={themeColors.accent}
+              trend={{ value: '+18.4%', isPositive: true }}
+              style={styles.statCardHalf}
+            />
+            <StatCard
+              title="Total Pesanan"
+              value={`${data.summary.totalOrders} Pesanan`}
+              icon={ShoppingCart}
+              iconBgColor={isDarkMode ? 'rgba(37,99,235,0.18)' : '#EFF6FF'}
+              iconColor="#3B82F6"
+              trend={{ value: '+12%', isPositive: true }}
+              style={styles.statCardHalf}
+            />
+          </View>
+        </FadeInUp>
 
-        <View style={styles.statsRow}>
-          <StatCard
-            title="Pengunjung Toko"
-            value={formatNumber(data.summary.totalVisitors)}
-            icon={Users}
-            iconBgColor={isDarkMode ? 'rgba(217,119,6,0.18)' : '#FFFBEB'}
-            iconColor="#F59E0B"
-            trend={{ value: '+24%', isPositive: true }}
-            style={styles.statCardHalf}
-          />
-          <StatCard
-            title="Tingkat Konversi"
-            value={`${data.summary.conversionRate}%`}
-            icon={TrendingUp}
-            iconBgColor={isDarkMode ? 'rgba(64,145,108,0.2)' : '#EAF4EE'}
-            iconColor={themeColors.accent}
-            trend={{ value: '+1.8%', isPositive: true }}
-            style={styles.statCardHalf}
-          />
-        </View>
+        <FadeInUp delay={120}>
+          <View style={styles.statsRow}>
+            <StatCard
+              title="Pengunjung Toko"
+              value={formatNumber(data.summary.totalVisitors)}
+              icon={Users}
+              iconBgColor={isDarkMode ? 'rgba(217,119,6,0.18)' : '#FFFBEB'}
+              iconColor="#F59E0B"
+              trend={{ value: '+24%', isPositive: true }}
+              style={styles.statCardHalf}
+            />
+            <StatCard
+              title="Tingkat Konversi"
+              value={`${data.summary.conversionRate}%`}
+              icon={TrendingUp}
+              iconBgColor={isDarkMode ? 'rgba(64,145,108,0.2)' : '#EAF4EE'}
+              iconColor={themeColors.accent}
+              trend={{ value: '+1.8%', isPositive: true }}
+              style={styles.statCardHalf}
+            />
+          </View>
+        </FadeInUp>
 
         {/* Interactive Bar Chart Card */}
-        <Card
-          style={[
-            styles.chartCard,
-            {
-              backgroundColor: themeColors.cardBackground,
-              borderColor: themeColors.cardBorder,
-            },
-          ]}
-        >
+        <FadeInUp delay={160}>
+          <Card
+            style={[
+              styles.chartCard,
+              {
+                backgroundColor: themeColors.cardBackground,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
           <View style={styles.chartHeader}>
             <View>
               <Text style={[styles.chartTitle, { color: themeColors.textPrimary }]}>
@@ -281,67 +291,70 @@ export function AnalyticsScreen() {
             })}
           </View>
         </Card>
+        </FadeInUp>
 
         {/* Top Selling Products List */}
-        <Card
-          style={[
-            styles.topProductsCard,
-            {
-              backgroundColor: themeColors.cardBackground,
-              borderColor: themeColors.cardBorder,
-            },
-          ]}
-        >
-          <View style={styles.topProductsHeader}>
-            <BarChart3 size={18} color={themeColors.accent} />
-            <Text style={[styles.topProductsTitle, { color: themeColors.textPrimary }]}>
-              Produk Terlaris Bulan Ini
-            </Text>
-          </View>
+        <FadeInUp delay={200}>
+          <Card
+            style={[
+              styles.topProductsCard,
+              {
+                backgroundColor: themeColors.cardBackground,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.topProductsHeader}>
+              <BarChart3 size={18} color={themeColors.accent} />
+              <Text style={[styles.topProductsTitle, { color: themeColors.textPrimary }]}>
+                Produk Terlaris Bulan Ini
+              </Text>
+            </View>
 
-          {data.topProducts.map((prod, idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.topProductRow,
-                { borderBottomColor: themeColors.divider },
-              ]}
-            >
+            {data.topProducts.map((prod, idx) => (
               <View
+                key={idx}
                 style={[
-                  styles.rankCircle,
-                  {
-                    backgroundColor: isDarkMode
-                      ? 'rgba(64,145,108,0.2)'
-                      : '#EAF4EE',
-                  },
+                  styles.topProductRow,
+                  { borderBottomColor: themeColors.divider },
                 ]}
               >
-                <Text style={[styles.rankText, { color: themeColors.accent }]}>
-                  {idx + 1}
-                </Text>
-              </View>
+                <View
+                  style={[
+                    styles.rankCircle,
+                    {
+                      backgroundColor: isDarkMode
+                        ? 'rgba(64,145,108,0.2)'
+                        : '#EAF4EE',
+                    },
+                  ]}
+                >
+                  <Text style={[styles.rankText, { color: themeColors.accent }]}>
+                    {idx + 1}
+                  </Text>
+                </View>
 
-              <View style={styles.topProductDetails}>
-                <Text style={[styles.topProductName, { color: themeColors.textPrimary }]}>
-                  {prod.name}
-                </Text>
-                <Text style={[styles.topProductSub, { color: themeColors.textMuted }]}>
-                  {prod.category} · Terjual {prod.soldCount} pcs
-                </Text>
-              </View>
+                <View style={styles.topProductDetails}>
+                  <Text style={[styles.topProductName, { color: themeColors.textPrimary }]}>
+                    {prod.name}
+                  </Text>
+                  <Text style={[styles.topProductSub, { color: themeColors.textMuted }]}>
+                    {prod.category} · Terjual {prod.soldCount} pcs
+                  </Text>
+                </View>
 
-              <View style={styles.topProductRight}>
-                <Text style={[styles.topProductRevenue, { color: themeColors.accent }]}>
-                  {formatRupiah(prod.revenue)}
-                </Text>
-                <Badge variant="brand" size="sm">
-                  {`+${prod.growth}%`}
-                </Badge>
+                <View style={styles.topProductRight}>
+                  <Text style={[styles.topProductRevenue, { color: themeColors.accent }]}>
+                    {formatRupiah(prod.revenue)}
+                  </Text>
+                  <Badge variant="brand" size="sm">
+                    {`+${prod.growth}%`}
+                  </Badge>
+                </View>
               </View>
-            </View>
-          ))}
-        </Card>
+            ))}
+          </Card>
+        </FadeInUp>
       </ScrollView>
     </SafeAreaView>
   );

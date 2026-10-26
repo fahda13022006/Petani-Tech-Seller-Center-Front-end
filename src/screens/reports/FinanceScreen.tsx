@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ScrollView,
   Modal,
@@ -19,6 +18,7 @@ import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { FilterChip, FilterChipGroup } from '@/components/common/FilterChip';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FadeInUp, PressableScale } from '@/components/common/Motion';
 import { Input } from '@/components/forms/Input';
 import { formatRupiah } from '@/utils/formatters';
 import { typography } from '@/theme/typography';
@@ -45,7 +45,7 @@ type FilterType = 'all' | 'Penjualan' | 'Pencairan';
 
 export function FinanceScreen() {
   const { colors: themeColors, isDark } = useTheme();
-  const bottomSpace = useBottomTabSpace(24);
+  const bottomSpace = useBottomTabSpace(28);
 
   const { summary, transactions, isLoading, fetchFinance, withdrawBalance } = useFinanceStore();
   const { user } = useAuthStore();
@@ -140,15 +140,24 @@ export function FinanceScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: themeColors.background }]}
+      style={[styles.safeArea, { backgroundColor: isDark ? themeColors.background : '#FAF9F6' }]}
       edges={['top']}
     >
-      {/* Ambient Glow */}
+      {/* 1. Subtle Botanical Canvas Gradient (Matches Login/Register Source of Truth) */}
+      <LinearGradient
+        colors={themeColors.gradients.main}
+        locations={[0, 0.22, 0.55, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* 2. Soft Ambient Mint Orbs */}
       <View
         style={[
-          styles.ambientGlow,
+          styles.decorativeOrbTopRight,
           {
-            borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : 'rgba(64, 145, 108, 0.08)',
+            borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : 'rgba(64, 145, 108, 0.06)',
           },
         ]}
         pointerEvents="none"
@@ -156,8 +165,8 @@ export function FinanceScreen() {
         <LinearGradient
           colors={
             isDark
-              ? ['rgba(209, 245, 232, 0.16)', 'rgba(64, 145, 108, 0.04)', 'transparent']
-              : ['rgba(209, 245, 232, 0.45)', 'rgba(255, 255, 255, 0.15)', 'transparent']
+              ? ['rgba(209, 245, 232, 0.18)', 'rgba(64, 145, 108, 0.04)', 'transparent']
+              : ['rgba(209, 245, 232, 0.40)', 'rgba(255, 255, 255, 0.15)', 'transparent']
           }
           start={{ x: 0.2, y: 0.2 }}
           end={{ x: 1, y: 1 }}
@@ -165,72 +174,88 @@ export function FinanceScreen() {
         />
       </View>
 
-      {/* Screen Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
-            borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
-          },
-        ]}
-      >
+      <View style={styles.decorativeOrbMiddleLeft} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(236, 243, 158, 0.16)', 'rgba(144, 169, 85, 0.04)', 'transparent']
+              : ['rgba(236, 243, 158, 0.22)', 'rgba(209, 245, 232, 0.08)', 'transparent']
+          }
+          start={{ x: 0.3, y: 0.3 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
+      {/* 3. Screen Header */}
+      <FadeInUp delay={0}>
         <View
           style={[
-            styles.sheenLine,
+            styles.header,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.18)'
-                : 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
+              borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
             },
           ]}
-        />
-        <View style={styles.headerContentRow}>
-          <View style={styles.titleCol}>
-            <View style={styles.eyebrowRow}>
-              <View
-                style={[
-                  styles.eyebrowDot,
-                  { backgroundColor: isDark ? themeColors.mint : themeColors.primary },
-                ]}
-              />
-              <Text
-                style={[
-                  styles.eyebrow,
-                  { color: isDark ? themeColors.mint : themeColors.primary },
-                ]}
-              >
-                KEUANGAN & DOMPET
-              </Text>
-            </View>
-            <Text style={[styles.screenTitle, { color: themeColors.textPrimary }]}>
-              Keuangan & Saldo
-            </Text>
-            <Text style={[styles.screenSubtitle, { color: themeColors.textSecondary }]}>
-              Pantau saldo hasil penjualan produk dan riwayat mutasi rekening
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={handleRefresh}
-            disabled={isRefreshing || isLoading}
-            activeOpacity={0.7}
+        >
+          {/* Top Hairline Sheen Line */}
+          <View
             style={[
-              styles.refreshButton,
+              styles.sheenLine,
               {
-                backgroundColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#F2FBF5',
-                borderColor: isDark ? 'rgba(209, 245, 232, 0.20)' : '#DDE8E0',
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.18)'
+                  : 'rgba(255, 255, 255, 0.95)',
               },
             ]}
-          >
-            {isRefreshing ? (
-              <ActivityIndicator size="small" color={isDark ? themeColors.mint : themeColors.primary} />
-            ) : (
-              <RotateCw size={17} color={isDark ? themeColors.mint : themeColors.primary} />
-            )}
-          </TouchableOpacity>
+          />
+          <View style={styles.headerContentRow}>
+            <View style={styles.titleCol}>
+              <View style={styles.eyebrowRow}>
+                <View
+                  style={[
+                    styles.eyebrowDot,
+                    { backgroundColor: isDark ? themeColors.mint : themeColors.primary },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.eyebrow,
+                    { color: isDark ? themeColors.mint : themeColors.primary },
+                  ]}
+                >
+                  KEUANGAN & DOMPET
+                </Text>
+              </View>
+              <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                Keuangan & Saldo
+              </Text>
+              <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                Pantau saldo hasil penjualan produk dan riwayat mutasi rekening
+              </Text>
+            </View>
+
+            <PressableScale
+              onPress={handleRefresh}
+              disabled={isRefreshing || isLoading}
+              style={[
+                styles.refreshButton,
+                {
+                  backgroundColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#F2FBF5',
+                  borderColor: isDark ? 'rgba(209, 245, 232, 0.20)' : '#DDE8E0',
+                },
+              ]}
+              accessibilityLabel="Segarkan data keuangan"
+            >
+              {isRefreshing ? (
+                <ActivityIndicator size="small" color={isDark ? themeColors.mint : themeColors.primary} />
+              ) : (
+                <RotateCw size={17} color={isDark ? themeColors.mint : themeColors.primary} />
+              )}
+            </PressableScale>
+          </View>
         </View>
-      </View>
+      </FadeInUp>
 
       {/* Scrollable Content */}
       <ScrollView
@@ -246,337 +271,374 @@ export function FinanceScreen() {
         }
       >
         {/* 1. HERO BALANCE CARD (Saldo Tersedia Focal Point) */}
-        <View style={styles.heroCardContainer}>
-          <LinearGradient
-            colors={['#183D2A', '#235338', '#2D6A4F']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroCardGradient}
-          >
-            {/* Top Sheen */}
-            <View style={styles.heroSheen} />
+        <FadeInUp delay={50}>
+          <View style={styles.heroCardContainer}>
+            <LinearGradient
+              colors={
+                isDark
+                  ? ['#143526', '#1D4533', '#275B44']
+                  : ['#225A41', '#2D6E50', '#3D8C67']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.heroCardGradient}
+            >
+              {/* Top Sheen */}
+              <View style={styles.heroSheen} />
 
-            {/* Header: Label + Eye Privacy Toggle */}
-            <View style={styles.heroTopRow}>
-              <View style={styles.heroLabelBox}>
-                <View style={styles.heroWalletIconWrap}>
-                  <Wallet size={15} color="#D1F5E8" />
+              {/* Header: Label + Eye Privacy Toggle */}
+              <View style={styles.heroTopRow}>
+                <View style={styles.heroLabelBox}>
+                  <View style={styles.heroWalletIconWrap}>
+                    <Wallet size={15} color="#D1F5E8" />
+                  </View>
+                  <Text style={styles.heroLabelText}>SALDO TERSEDIA</Text>
                 </View>
-                <Text style={styles.heroLabelText}>SALDO TERSEDIA</Text>
+
+                <PressableScale
+                  onPress={() => setIsBalanceHidden(!isBalanceHidden)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={styles.heroEyeButton}
+                  accessibilityLabel="Sembunyikan saldo"
+                >
+                  {isBalanceHidden ? (
+                    <EyeOff size={16} color="rgba(255, 255, 255, 0.85)" />
+                  ) : (
+                    <Eye size={16} color="rgba(255, 255, 255, 0.85)" />
+                  )}
+                </PressableScale>
               </View>
 
-              <TouchableOpacity
-                onPress={() => setIsBalanceHidden(!isBalanceHidden)}
-                activeOpacity={0.75}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={styles.heroEyeButton}
-                accessibilityLabel="Sembunyikan saldo"
-              >
-                {isBalanceHidden ? (
-                  <EyeOff size={16} color="rgba(255, 255, 255, 0.85)" />
-                ) : (
-                  <Eye size={16} color="rgba(255, 255, 255, 0.85)" />
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* Main Balance Value */}
-            <View style={styles.heroBalanceRow}>
-              <Text
-                style={styles.heroBalanceValue}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {availableBalanceDisplay}
-              </Text>
-            </View>
-
-            {/* Pending Balance Indicator (Context) */}
-            {summary?.pendingBalance ? (
-              <View style={styles.pendingRow}>
-                <Clock size={12} color="#D1F5E8" />
-                <Text style={styles.pendingText}>
-                  {formatRupiah(summary.pendingBalance)} sedang diproses penyelesaian pesanan
+              {/* Main Balance Value */}
+              <View style={styles.heroBalanceRow}>
+                <Text
+                  style={styles.heroBalanceValue}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {availableBalanceDisplay}
                 </Text>
               </View>
-            ) : null}
 
-            {/* Tarik Saldo Primary Action */}
-            <TouchableOpacity
-              onPress={() => setIsWithdrawModalOpen(true)}
-              activeOpacity={0.85}
-              style={styles.withdrawHeroButton}
-            >
-              <Text style={styles.withdrawHeroButtonText}>Tarik Saldo ke Rekening</Text>
-              <View style={styles.withdrawHeroIconCircle}>
-                <ArrowUpRight size={15} color="#183D2A" />
-              </View>
-            </TouchableOpacity>
-          </LinearGradient>
-        </View>
+              {/* Pending Balance Indicator (Context) */}
+              {summary?.pendingBalance ? (
+                <View style={styles.pendingRow}>
+                  <Clock size={12} color="#D1F5E8" />
+                  <Text style={styles.pendingText}>
+                    {formatRupiah(summary.pendingBalance)} sedang diproses penyelesaian pesanan
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Tarik Saldo Primary Action */}
+              <PressableScale
+                onPress={() => setIsWithdrawModalOpen(true)}
+                style={[
+                  styles.withdrawHeroButton,
+                  {
+                    backgroundColor: isDark ? '#D1F5E8' : '#FFFFFF',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.withdrawHeroButtonText,
+                    { color: isDark ? '#143526' : '#1D4A34' },
+                  ]}
+                >
+                  Tarik Saldo ke Rekening
+                </Text>
+                <View
+                  style={[
+                    styles.withdrawHeroIconCircle,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(20, 53, 38, 0.15)'
+                        : 'rgba(29, 74, 52, 0.10)',
+                    },
+                  ]}
+                >
+                  <ArrowUpRight size={15} color={isDark ? '#143526' : '#1D4A34'} />
+                </View>
+              </PressableScale>
+            </LinearGradient>
+          </View>
+        </FadeInUp>
 
         {/* 2. SUPPORTING FINANCIAL METRICS (Neutral Clean Cards) */}
-        <View style={styles.metricsRow}>
-          {/* Card 1: Pendapatan Bulan Ini */}
-          <Card
-            style={[
-              styles.metricCard,
-              {
-                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-              },
-            ]}
-          >
-            <View style={styles.metricTop}>
-              <View
-                style={[
-                  styles.metricIconWrap,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(64, 145, 108, 0.22)'
-                      : '#EAF4EE',
-                  },
-                ]}
-              >
-                <TrendingUp size={16} color={isDark ? themeColors.mint : themeColors.primary} />
-              </View>
-              <View
-                style={[
-                  styles.trendBadge,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(64, 145, 108, 0.25)'
-                      : '#EAF4EE',
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.trendBadgeText,
-                    { color: isDark ? '#D1F5E8' : '#2D6A4F' },
-                  ]}
-                >
-                  +18.4%
-                </Text>
-              </View>
-            </View>
-
-            <Text style={[styles.metricLabel, { color: themeColors.textSecondary }]}>
-              Pendapatan Bulan Ini
-            </Text>
-            <Text
-              style={[styles.metricValue, { color: themeColors.textPrimary }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {formatRupiah(summary?.monthlyRevenue || 15200000)}
-            </Text>
-            <Text style={[styles.metricSubtext, { color: themeColors.textMuted }]}>
-              Dari transaksi pesanan selesai
-            </Text>
-          </Card>
-
-          {/* Card 2: Total Sudah Ditarik */}
-          <Card
-            style={[
-              styles.metricCard,
-              {
-                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-              },
-            ]}
-          >
-            <View style={styles.metricTop}>
-              <View
-                style={[
-                  styles.metricIconWrap,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(209, 245, 232, 0.15)'
-                      : '#F2FBF5',
-                  },
-                ]}
-              >
-                <CheckCircle2 size={16} color={isDark ? themeColors.mint : '#40916C'} />
-              </View>
-              <View
-                style={[
-                  styles.statusPill,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : '#F4F7F2',
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.statusPillText,
-                    { color: themeColors.textSecondary },
-                  ]}
-                >
-                  Mutasi Bank
-                </Text>
-              </View>
-            </View>
-
-            <Text style={[styles.metricLabel, { color: themeColors.textSecondary }]}>
-              Total Sudah Ditarik
-            </Text>
-            <Text
-              style={[styles.metricValue, { color: themeColors.textPrimary }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {formatRupiah(summary?.totalWithdrawn || 34500000)}
-            </Text>
-            <Text style={[styles.metricSubtext, { color: themeColors.textMuted }]}>
-              Berhasil ditransfer ke rekening
-            </Text>
-          </Card>
-        </View>
-
-        {/* 3. REGISTERED PAYOUT ACCOUNT (Clean & Trustworthy) */}
-        <Card
-          style={[
-            styles.payoutCard,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#E6EDE7',
-            },
-          ]}
-        >
-          {/* Header Row */}
-          <View style={styles.payoutHeaderRow}>
-            <View style={styles.payoutTitleWrap}>
-              <View
-                style={[
-                  styles.payoutIconCircle,
-                  {
-                    backgroundColor: isDark
-                      ? 'rgba(64, 145, 108, 0.22)'
-                      : '#EAF4EE',
-                  },
-                ]}
-              >
-                <Building2 size={17} color={isDark ? themeColors.mint : themeColors.primary} />
-              </View>
-              <View style={styles.payoutTitleCol}>
-                <Text style={[styles.payoutHeaderTitle, { color: themeColors.textPrimary }]}>
-                  Rekening Pencairan Terdaftar
-                </Text>
-                <Text style={[styles.payoutHeaderSub, { color: themeColors.textMuted }]}>
-                  Pencairan instan tanpa biaya admin
-                </Text>
-              </View>
-            </View>
-
-            {/* Verification Status Badge */}
-            <Badge variant="brand" size="sm" dot>
-              Terverifikasi
-            </Badge>
-          </View>
-
-          {/* Account Details Box */}
-          <View
-            style={[
-              styles.payoutDetailBox,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(11, 32, 20, 0.65)'
-                  : '#FAF9F6',
-                borderColor: isDark
-                  ? 'rgba(209, 245, 232, 0.12)'
-                  : '#EDF2EE',
-              },
-            ]}
-          >
-            <View style={styles.payoutBankRow}>
-              <Text style={[styles.payoutBankName, { color: themeColors.textPrimary }]}>
-                {user?.bankAccount?.bankName || 'Bank Rakyat Indonesia (BRI)'}
-              </Text>
-              <Text style={[styles.payoutAccountNumber, { color: themeColors.textSecondary }]}>
-                {maskedAccountNumber}
-              </Text>
-            </View>
-
-            <View style={styles.payoutHolderRow}>
-              <Text style={[styles.payoutHolderLabel, { color: themeColors.textMuted }]}>
-                Atas Nama:
-              </Text>
-              <Text style={[styles.payoutHolderName, { color: themeColors.textPrimary }]}>
-                {user?.bankAccount?.accountHolder || user?.name || 'Mitra Petani Terdaftar'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Security Guarantee Note */}
-          <View style={styles.payoutSecurityRow}>
-            <ShieldCheck size={13} color={isDark ? themeColors.mint : '#40916C'} />
-            <Text style={[styles.payoutSecurityText, { color: themeColors.textMuted }]}>
-              Dilindungi verifikasi biometrik & notifikasi mutasi otomatis
-            </Text>
-          </View>
-        </Card>
-
-        {/* 4. TRANSACTION HISTORY SECTION */}
-        <View style={styles.txSectionHeader}>
-          <View style={styles.txTitleRow}>
-            <Text style={[styles.txSectionTitle, { color: themeColors.textPrimary }]}>
-              Riwayat Transaksi
-            </Text>
-            <View
+        <FadeInUp delay={90}>
+          <View style={styles.metricsRow}>
+            {/* Card 1: Pendapatan Bulan Ini */}
+            <Card
+              sheen
+              variant="elevated"
               style={[
-                styles.txCountBadge,
+                styles.metricCard,
                 {
-                  backgroundColor: isDark
-                    ? 'rgba(209, 245, 232, 0.15)'
-                    : '#EAF4EE',
+                  backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
                 },
               ]}
             >
+              <View style={styles.metricTop}>
+                <View
+                  style={[
+                    styles.metricIconWrap,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(64, 145, 108, 0.22)'
+                        : '#EAF4EE',
+                    },
+                  ]}
+                >
+                  <TrendingUp size={16} color={isDark ? themeColors.mint : themeColors.primary} />
+                </View>
+                <View
+                  style={[
+                    styles.trendBadge,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(64, 145, 108, 0.25)'
+                        : '#EAF4EE',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.trendBadgeText,
+                      { color: isDark ? '#D1F5E8' : '#2D6A4F' },
+                    ]}
+                  >
+                    +18.4%
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={[styles.metricLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                Pendapatan Bulan Ini
+              </Text>
               <Text
-                style={[
-                  styles.txCountText,
-                  { color: isDark ? themeColors.mint : themeColors.primary },
-                ]}
+                style={[styles.metricValue, { color: isDark ? '#FFFFFF' : '#183326' }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
-                {filteredTransactions.length}
+                {formatRupiah(summary?.monthlyRevenue || 15200000)}
+              </Text>
+              <Text style={[styles.metricSubtext, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                Dari transaksi pesanan selesai
+              </Text>
+            </Card>
+
+            {/* Card 2: Total Sudah Ditarik */}
+            <Card
+              sheen
+              variant="elevated"
+              style={[
+                styles.metricCard,
+                {
+                  backgroundColor: isDark ? 'rgba(22, 58, 38, 0.70)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+                },
+              ]}
+            >
+              <View style={styles.metricTop}>
+                <View
+                  style={[
+                    styles.metricIconWrap,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(209, 245, 232, 0.15)'
+                        : '#F2FBF5',
+                    },
+                  ]}
+                >
+                  <CheckCircle2 size={16} color={isDark ? themeColors.mint : '#40916C'} />
+                </View>
+                <View
+                  style={[
+                    styles.statusPill,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : '#F4F7F2',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusPillText,
+                      { color: isDark ? '#D1F5E8' : '#64746A' },
+                    ]}
+                  >
+                    Mutasi Bank
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={[styles.metricLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                Total Sudah Ditarik
+              </Text>
+              <Text
+                style={[styles.metricValue, { color: isDark ? '#FFFFFF' : '#183326' }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {formatRupiah(summary?.totalWithdrawn || 34500000)}
+              </Text>
+              <Text style={[styles.metricSubtext, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                Berhasil ditransfer ke rekening
+              </Text>
+            </Card>
+          </View>
+        </FadeInUp>
+
+        {/* 3. REGISTERED PAYOUT ACCOUNT (Clean & Trustworthy) */}
+        <FadeInUp delay={130}>
+          <Card
+            sheen
+            variant="elevated"
+            style={[
+              styles.payoutCard,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.75)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+              },
+            ]}
+          >
+            {/* Header Row */}
+            <View style={styles.payoutHeaderRow}>
+              <View style={styles.payoutTitleWrap}>
+                <View
+                  style={[
+                    styles.payoutIconCircle,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(64, 145, 108, 0.22)'
+                        : '#EAF4EE',
+                    },
+                  ]}
+                >
+                  <Building2 size={17} color={isDark ? themeColors.mint : themeColors.primary} />
+                </View>
+                <View style={styles.payoutTitleCol}>
+                  <Text style={[styles.payoutHeaderTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                    Rekening Pencairan Terdaftar
+                  </Text>
+                  <Text style={[styles.payoutHeaderSub, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                    Pencairan instan tanpa biaya admin
+                  </Text>
+                </View>
+              </View>
+
+              {/* Verification Status Badge */}
+              <Badge variant="brand" size="sm" dot>
+                Terverifikasi
+              </Badge>
+            </View>
+
+            {/* Account Details Box */}
+            <View
+              style={[
+                styles.payoutDetailBox,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(11, 32, 20, 0.65)'
+                    : '#FAF9F6',
+                  borderColor: isDark
+                    ? 'rgba(209, 245, 232, 0.12)'
+                    : '#EDF2EE',
+                },
+              ]}
+            >
+              <View style={styles.payoutBankRow}>
+                <Text style={[styles.payoutBankName, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.bankAccount?.bankName || 'Bank Rakyat Indonesia (BRI)'}
+                </Text>
+                <Text style={[styles.payoutAccountNumber, { color: isDark ? '#D1F5E8' : '#2D6A4F' }]}>
+                  {maskedAccountNumber}
+                </Text>
+              </View>
+
+              <View style={styles.payoutHolderRow}>
+                <Text style={[styles.payoutHolderLabel, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                  Atas Nama:
+                </Text>
+                <Text style={[styles.payoutHolderName, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {user?.bankAccount?.accountHolder || user?.name || 'Mitra Petani Terdaftar'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Security Guarantee Note */}
+            <View style={styles.payoutSecurityRow}>
+              <ShieldCheck size={13} color={isDark ? themeColors.mint : '#40916C'} />
+              <Text style={[styles.payoutSecurityText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                Dilindungi verifikasi biometrik & notifikasi mutasi otomatis
               </Text>
             </View>
-          </View>
-        </View>
+          </Card>
+        </FadeInUp>
 
-        {/* Filter Chips */}
-        <FilterChipGroup style={styles.filterChipGroup} contentContainerStyle={styles.filterChipContent}>
-          <FilterChip
-            label="Semua"
-            count={transactions.length}
-            selected={filterType === 'all'}
-            onPress={() => setFilterType('all')}
-            size="sm"
-          />
-          <FilterChip
-            label="Penjualan"
-            count={salesCount}
-            selected={filterType === 'Penjualan'}
-            onPress={() => setFilterType('Penjualan')}
-            size="sm"
-          />
-          <FilterChip
-            label="Pencairan"
-            count={withdrawCount}
-            selected={filterType === 'Pencairan'}
-            onPress={() => setFilterType('Pencairan')}
-            size="sm"
-          />
-        </FilterChipGroup>
+        {/* 4. TRANSACTION HISTORY SECTION */}
+        <FadeInUp delay={170}>
+          <View style={styles.txSectionHeader}>
+            <View style={styles.txTitleRow}>
+              <Text style={[styles.txSectionTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                Riwayat Transaksi
+              </Text>
+              <View
+                style={[
+                  styles.txCountBadge,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(209, 245, 232, 0.15)'
+                      : '#EAF4EE',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.txCountText,
+                    { color: isDark ? themeColors.mint : themeColors.primary },
+                  ]}
+                >
+                  {filteredTransactions.length}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Filter Chips */}
+          <FilterChipGroup style={styles.filterChipGroup} contentContainerStyle={styles.filterChipContent}>
+            <FilterChip
+              label="Semua"
+              count={transactions.length}
+              selected={filterType === 'all'}
+              onPress={() => setFilterType('all')}
+              size="sm"
+            />
+            <FilterChip
+              label="Penjualan"
+              count={salesCount}
+              selected={filterType === 'Penjualan'}
+              onPress={() => setFilterType('Penjualan')}
+              size="sm"
+            />
+            <FilterChip
+              label="Pencairan"
+              count={withdrawCount}
+              selected={filterType === 'Pencairan'}
+              onPress={() => setFilterType('Pencairan')}
+              size="sm"
+            />
+          </FilterChipGroup>
+        </FadeInUp>
 
         {/* Transactions List */}
         {isLoading && transactions.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={themeColors.primary} />
-            <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+            <Text style={[styles.loadingText, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
               Memuat mutasi keuangan...
             </Text>
           </View>
@@ -587,110 +649,113 @@ export function FinanceScreen() {
             description="Riwayat transaksi penjualan dan mutasi pencairan akan otomatis tercatat di sini."
           />
         ) : (
-          filteredTransactions.map((tx) => {
+          filteredTransactions.map((tx, index) => {
             const isNegative = tx.amount < 0;
             const isPenjualan = tx.type === 'Penjualan';
             const isPencairan = tx.type === 'Pencairan';
 
             return (
-              <Card
-                key={tx.id}
-                style={[
-                  styles.txCard,
-                  {
-                    backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
-                    borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#E6EDE7',
-                  },
-                ]}
-              >
-                <View style={styles.txRow}>
-                  {/* Left: Directional Icon Box */}
-                  <View
-                    style={[
-                      styles.txIconBox,
-                      {
-                        backgroundColor: isPenjualan
-                          ? isDark
-                            ? 'rgba(64, 145, 108, 0.25)'
-                            : '#EAF4EE'
-                          : isPencairan
-                          ? isDark
-                            ? 'rgba(239, 68, 68, 0.18)'
-                            : '#FEF2F2'
-                          : isDark
-                          ? 'rgba(255, 255, 255, 0.08)'
-                          : '#F1F5F9',
-                      },
-                    ]}
-                  >
-                    {isPenjualan ? (
-                      <ArrowDownLeft size={16} color={isDark ? themeColors.mint : '#2D6A4F'} />
-                    ) : isPencairan ? (
-                      <ArrowUpRight size={16} color={isDark ? '#F87171' : '#DC2626'} />
-                    ) : tx.type === 'Cashback Promo' ? (
-                      <Sparkles size={16} color={isDark ? themeColors.mint : '#0D9488'} />
-                    ) : (
-                      <Receipt size={16} color={isDark ? '#94A3B8' : '#475569'} />
-                    )}
-                  </View>
-
-                  {/* Middle: Description & Metadata */}
-                  <View style={styles.txInfoCol}>
-                    <Text
-                      style={[styles.txTitle, { color: themeColors.textPrimary }]}
-                      numberOfLines={1}
-                    >
-                      {tx.description}
-                    </Text>
-
-                    <View style={styles.txMetaRow}>
-                      <Clock size={11} color={themeColors.textMuted} />
-                      <Text style={[styles.txDateText, { color: themeColors.textMuted }]}>
-                        {tx.date}
-                      </Text>
-                      <Text style={[styles.txDividerBullet, { color: themeColors.textMuted }]}>
-                        •
-                      </Text>
-                      <Text style={[styles.txRefText, { color: themeColors.textSecondary }]}>
-                        Ref: {tx.referenceNo}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Right: Amount & Status Badge */}
-                  <View style={styles.txRightCol}>
-                    <Text
+              <FadeInUp key={tx.id} delay={190 + Math.min(index, 6) * 35}>
+                <Card
+                  sheen
+                  variant="elevated"
+                  style={[
+                    styles.txCard,
+                    {
+                      backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
+                      borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+                    },
+                  ]}
+                >
+                  <View style={styles.txRow}>
+                    {/* Left: Directional Icon Box */}
+                    <View
                       style={[
-                        styles.txAmountText,
+                        styles.txIconBox,
                         {
-                          color: isNegative
+                          backgroundColor: isPenjualan
                             ? isDark
-                              ? '#F87171'
-                              : '#DC2626'
+                              ? 'rgba(64, 145, 108, 0.25)'
+                              : '#EAF4EE'
+                            : isPencairan
+                            ? isDark
+                              ? 'rgba(239, 68, 68, 0.18)'
+                              : '#FEF2F2'
                             : isDark
-                            ? themeColors.mint
-                            : '#2D6A4F',
+                            ? 'rgba(255, 255, 255, 0.08)'
+                            : '#F1F5F9',
                         },
                       ]}
                     >
-                      {isNegative ? '-' : '+'}{formatRupiah(Math.abs(tx.amount))}
-                    </Text>
+                      {isPenjualan ? (
+                        <ArrowDownLeft size={16} color={isDark ? themeColors.mint : '#2D6A4F'} />
+                      ) : isPencairan ? (
+                        <ArrowUpRight size={16} color={isDark ? '#F87171' : '#DC2626'} />
+                      ) : tx.type === 'Cashback Promo' ? (
+                        <Sparkles size={16} color={isDark ? themeColors.mint : '#0D9488'} />
+                      ) : (
+                        <Receipt size={16} color={isDark ? '#94A3B8' : '#475569'} />
+                      )}
+                    </View>
 
-                    <Badge
-                      variant={
-                        tx.status === 'Berhasil'
-                          ? 'brand'
-                          : tx.status === 'Diproses'
-                          ? 'warning'
-                          : 'danger'
-                      }
-                      size="sm"
-                    >
-                      {tx.status}
-                    </Badge>
+                    {/* Middle: Description & Metadata */}
+                    <View style={styles.txInfoCol}>
+                      <Text
+                        style={[styles.txTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}
+                        numberOfLines={1}
+                      >
+                        {tx.description}
+                      </Text>
+
+                      <View style={styles.txMetaRow}>
+                        <Clock size={11} color={isDark ? '#8BA899' : '#7E9180'} />
+                        <Text style={[styles.txDateText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                          {tx.date}
+                        </Text>
+                        <Text style={[styles.txDividerBullet, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                          •
+                        </Text>
+                        <Text style={[styles.txRefText, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                          Ref: {tx.referenceNo}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Right: Amount & Status Badge */}
+                    <View style={styles.txRightCol}>
+                      <Text
+                        style={[
+                          styles.txAmountText,
+                          {
+                            color: isNegative
+                              ? isDark
+                                ? '#F87171'
+                                : '#DC2626'
+                              : isDark
+                              ? themeColors.mint
+                              : '#2D6A4F',
+                          },
+                        ]}
+                      >
+                        {isNegative ? '-' : '+'}{formatRupiah(Math.abs(tx.amount))}
+                      </Text>
+
+                      <Badge
+                        variant={
+                          tx.status === 'Berhasil'
+                            ? 'brand'
+                            : tx.status === 'Diproses'
+                            ? 'warning'
+                            : 'danger'
+                        }
+                        size="sm"
+                      >
+                        {tx.status}
+                      </Badge>
+                    </View>
                   </View>
-                </View>
-              </Card>
+                </Card>
+              </FadeInUp>
             );
           })
         )}
@@ -718,14 +783,14 @@ export function FinanceScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeaderRow}>
               <View style={styles.modalHeaderTitleCol}>
-                <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>
+                <Text style={[styles.modalTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
                   Tarik Saldo ke Rekening
                 </Text>
-                <Text style={[styles.modalSubtitle, { color: themeColors.textSecondary }]}>
+                <Text style={[styles.modalSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
                   Pencairan dana langsung diproses ke rekening tujuan
                 </Text>
               </View>
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => setIsWithdrawModalOpen(false)}
                 disabled={isSubmitting}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -735,9 +800,10 @@ export function FinanceScreen() {
                     backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#F2FBF5',
                   },
                 ]}
+                accessibilityLabel="Tutup modal penarikan"
               >
-                <X size={18} color={themeColors.textSecondary} />
-              </TouchableOpacity>
+                <X size={18} color={isDark ? '#D1F5E8' : '#64746A'} />
+              </PressableScale>
             </View>
 
             {/* Available Balance Indicator */}
@@ -752,7 +818,7 @@ export function FinanceScreen() {
             >
               <View style={styles.modalBalanceLabelRow}>
                 <Wallet size={14} color={isDark ? themeColors.mint : themeColors.primary} />
-                <Text style={[styles.modalBalanceLabel, { color: themeColors.textSecondary }]}>
+                <Text style={[styles.modalBalanceLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
                   Saldo Tersedia Saat Ini:
                 </Text>
               </View>
@@ -783,7 +849,7 @@ export function FinanceScreen() {
                 const isSelected = withdrawAmount === String(amt);
 
                 return (
-                  <TouchableOpacity
+                  <PressableScale
                     key={idx}
                     onPress={() => setWithdrawAmount(String(amt))}
                     style={[
@@ -805,7 +871,6 @@ export function FinanceScreen() {
                           : '#E6EDE7',
                       },
                     ]}
-                    activeOpacity={0.75}
                   >
                     <Text
                       style={[
@@ -815,7 +880,9 @@ export function FinanceScreen() {
                             ? isDark
                               ? '#FFFFFF'
                               : '#183D2A'
-                            : themeColors.textPrimary,
+                            : isDark
+                            ? '#FFFFFF'
+                            : '#183326',
                           fontFamily: isSelected
                             ? typography.fontFamily.bold
                             : typography.fontFamily.medium,
@@ -824,7 +891,7 @@ export function FinanceScreen() {
                     >
                       {label}
                     </Text>
-                  </TouchableOpacity>
+                  </PressableScale>
                 );
               })}
             </View>
@@ -841,14 +908,14 @@ export function FinanceScreen() {
             >
               <View style={styles.modalBankHeader}>
                 <Building2 size={15} color={isDark ? themeColors.mint : themeColors.primary} />
-                <Text style={[styles.modalBankTitle, { color: themeColors.textPrimary }]}>
+                <Text style={[styles.modalBankTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
                   {user?.bankAccount?.bankName || 'Bank Rakyat Indonesia (BRI)'}
                 </Text>
               </View>
-              <Text style={[styles.modalBankAcc, { color: themeColors.textSecondary }]}>
+              <Text style={[styles.modalBankAcc, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
                 {maskedAccountNumber} • a.n. {user?.bankAccount?.accountHolder || user?.name || 'Mitra Penjual'}
               </Text>
-              <Text style={[styles.modalBankGuarantee, { color: themeColors.textMuted }]}>
+              <Text style={[styles.modalBankGuarantee, { color: isDark ? '#8BA899' : '#7E9180' }]}>
                 ✓ Transfer otomatis diproses dalam 1-5 menit
               </Text>
             </View>
@@ -885,21 +952,32 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  ambientGlow: {
+  decorativeOrbTopRight: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
+    top: -80,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  decorativeOrbMiddleLeft: {
+    position: 'absolute',
+    top: 360,
+    left: -80,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
     overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 14,
     borderBottomWidth: 1,
     position: 'relative',
+    overflow: 'hidden',
   },
   sheenLine: {
     position: 'absolute',
@@ -1071,7 +1149,13 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 4,
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    overflow: 'hidden',
   },
   metricTop: {
     flexDirection: 'row',
@@ -1123,8 +1207,14 @@ const styles = StyleSheet.create({
   payoutCard: {
     padding: 16,
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
     gap: 12,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+    overflow: 'hidden',
   },
   payoutHeaderRow: {
     flexDirection: 'row',
@@ -1236,7 +1326,13 @@ const styles = StyleSheet.create({
   txCard: {
     padding: 14,
     borderRadius: 18,
-    borderWidth: 1,
+    borderWidth: 1.5,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
   },
   txRow: {
     flexDirection: 'row',
@@ -1298,7 +1394,7 @@ const styles = StyleSheet.create({
   // 5. Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(24, 51, 38, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 18,
@@ -1308,13 +1404,14 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     borderRadius: 24,
     padding: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
     gap: 14,
-    shadowColor: '#000000',
+    shadowColor: '#183326',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.22,
     shadowRadius: 20,
     elevation: 8,
+    overflow: 'hidden',
   },
   modalHeaderRow: {
     flexDirection: 'row',

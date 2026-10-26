@@ -17,3 +17,4 @@ export * from '@/components/forms/SearchInput';
 export * from '@/components/cards/Card';
 export * from '@/components/cards/StatCard';
 export * from '@/components/cards/FinancialCard';
+export * from './Motion';

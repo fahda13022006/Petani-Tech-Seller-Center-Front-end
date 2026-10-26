@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ScrollView,
   Image,
@@ -12,14 +11,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useProductStore } from '@/store/useProductStore';
 import { ProductFilterTab, Product } from '@/types';
-import { Card } from '@/components/cards/Card';
+import { ProductCard } from '@/components/cards/ProductCard';
 import { Button } from '@/components/common/Button';
-import { IconButton } from '@/components/common/IconButton';
 import { Badge } from '@/components/common/Badge';
 import { FilterChip, FilterChipGroup } from '@/components/common/FilterChip';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { ConfirmationModal } from '@/components/common/ConfirmationModal';
+import { FadeInUp, PressableScale } from '@/components/common/Motion';
 import { SearchInput } from '@/components/forms/SearchInput';
 import { Input } from '@/components/forms/Input';
 import { ProductFormModal } from '@/components/products/ProductFormModal';
@@ -31,9 +30,7 @@ import { useBottomTabSpace } from '@/navigation/hooks';
 import {
   Plus,
   Edit2,
-  Trash2,
   Boxes,
-  AlertTriangle,
   X,
   Package,
 } from 'lucide-react-native';
@@ -48,7 +45,7 @@ const STATUS_TABS: { key: ProductFilterTab; label: string }[] = [
 
 export function ProductsScreen() {
   const { colors: themeColors, isDark } = useTheme();
-  const bottomSpace = useBottomTabSpace(24);
+  const bottomSpace = useBottomTabSpace(28);
 
   const {
     products,
@@ -164,7 +161,7 @@ export function ProductsScreen() {
       style={[styles.safeArea, { backgroundColor: isDark ? themeColors.background : '#FAF9F6' }]}
       edges={['top']}
     >
-      {/* 1. Subtle Botanical Canvas Gradient */}
+      {/* 1. Subtle Botanical Canvas Gradient (Matches Login/Register Source of Truth) */}
       <LinearGradient
         colors={themeColors.gradients.main}
         locations={[0, 0.22, 0.55, 1]}
@@ -173,7 +170,7 @@ export function ProductsScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* 2. Soft Ambient Mint Orb Top Right */}
+      {/* 2. Soft Ambient Mint Orbs */}
       <View
         style={[
           styles.decorativeOrbTopRight,
@@ -195,144 +192,196 @@ export function ProductsScreen() {
         />
       </View>
 
+      <View style={styles.decorativeOrbMiddleLeft} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(236, 243, 158, 0.16)', 'rgba(144, 169, 85, 0.04)', 'transparent']
+              : ['rgba(236, 243, 158, 0.22)', 'rgba(209, 245, 232, 0.08)', 'transparent']
+          }
+          start={{ x: 0.3, y: 0.3 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
       {/* 3. Screen Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
-            borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
-          },
-        ]}
-      >
-        {/* Hairline top sheen */}
+      <FadeInUp delay={0}>
         <View
           style={[
-            styles.sheenLine,
+            styles.header,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.18)'
-                : 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
+              borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
             },
           ]}
-        />
-        <View style={styles.titleCol}>
-          <Text
+        >
+          {/* Hairline top sheen */}
+          <View
             style={[
-              styles.eyebrow,
-              { color: isDark ? themeColors.mint : themeColors.primary },
+              styles.sheenLine,
+              {
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.18)'
+                  : 'rgba(255, 255, 255, 0.95)',
+              },
+            ]}
+          />
+          <View style={styles.titleCol}>
+            <Text
+              style={[
+                styles.eyebrow,
+                { color: isDark ? themeColors.mint : themeColors.primary },
+              ]}
+            >
+              INVENTARIS & KATALOG
+            </Text>
+            <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+              Katalog Produk
+            </Text>
+            <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              Kelola stok, harga, & varian sarana pertanian
+            </Text>
+          </View>
+
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Plus size={15} color="#FFFFFF" />}
+            onPress={() => {
+              setEditingProduct(null);
+              setIsAddModalOpen(true);
+            }}
+          >
+            Tambah
+          </Button>
+        </View>
+      </FadeInUp>
+
+      {/* 4. Search and Filter Chips */}
+      <FadeInUp delay={50}>
+        <View style={styles.searchContainer}>
+          <SearchInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Cari nama produk, SKU, kategori..."
+            variant="glass"
+          />
+        </View>
+
+        {/* Status Filter Tabs */}
+        <View style={styles.tabsSection}>
+          <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
+            {STATUS_TABS.map((tab) => {
+              const isSelected = activeTab === tab.key;
+              return (
+                <FilterChip
+                  key={tab.key}
+                  label={tab.label}
+                  selected={isSelected}
+                  count={getTabCount(tab.key)}
+                  size="sm"
+                  onPress={() => setActiveTab(tab.key)}
+                />
+              );
+            })}
+          </FilterChipGroup>
+        </View>
+
+        {/* Category Filter Chips */}
+        <View style={styles.categorySection}>
+          <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
+            {PRODUCT_CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <FilterChip
+                  key={cat}
+                  label={cat}
+                  selected={isSelected}
+                  size="sm"
+                  onPress={() => setSelectedCategory(cat)}
+                />
+              );
+            })}
+          </FilterChipGroup>
+        </View>
+      </FadeInUp>
+
+      {/* 5. Quick Summary KPI Bar */}
+      <FadeInUp delay={90}>
+        <View style={styles.summaryBar}>
+          <View
+            style={[
+              styles.summaryPill,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+              },
             ]}
           >
-            INVENTARIS & KATALOG
-          </Text>
-          <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
-            Katalog Produk
-          </Text>
-          <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
-            Kelola stok, harga, & varian sarana pertanian
-          </Text>
-        </View>
-
-        <Button
-          variant="primary"
-          size="sm"
-          leftIcon={<Plus size={15} color="#FFFFFF" />}
-          onPress={() => {
-            setEditingProduct(null);
-            setIsAddModalOpen(true);
-          }}
-        >
-          Tambah
-        </Button>
-      </View>
-
-      {/* 4. Search Input */}
-      <View style={styles.searchContainer}>
-        <SearchInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Cari nama produk, SKU, kategori..."
-          variant="glass"
-        />
-      </View>
-
-      {/* 5. Status Filter Tabs */}
-      <View style={styles.tabsSection}>
-        <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
-          {STATUS_TABS.map((tab) => {
-            const isSelected = activeTab === tab.key;
-            return (
-              <FilterChip
-                key={tab.key}
-                label={tab.label}
-                selected={isSelected}
-                count={getTabCount(tab.key)}
-                size="sm"
-                onPress={() => setActiveTab(tab.key)}
-              />
-            );
-          })}
-        </FilterChipGroup>
-      </View>
-
-      {/* 6. Category Filter Chips */}
-      <View style={styles.categorySection}>
-        <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
-          {PRODUCT_CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat;
-            return (
-              <FilterChip
-                key={cat}
-                label={cat}
-                selected={isSelected}
-                size="sm"
-                onPress={() => setSelectedCategory(cat)}
-              />
-            );
-          })}
-        </FilterChipGroup>
-      </View>
-
-      {/* 7. Quick Summary KPI Bar */}
-      <View style={styles.summaryBar}>
-        <View
-          style={[
-            styles.summaryPill,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
-            },
-          ]}
-        >
-          <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
-            Total: <Text style={[styles.summaryValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>{products.length}</Text>
-          </Text>
-          <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
-          <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
-            Aktif: <Text style={[styles.summaryValue, { color: isDark ? '#D1F5E8' : '#31572C' }]}>{activeCount}</Text>
-          </Text>
-
-          {lowStockCount > 0 ? (
-            <>
-              <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
-              <Text style={[styles.summaryLabel, { color: '#D97706' }]}>
-                Menipis: <Text style={[styles.summaryValue, { color: '#D97706' }]}>{lowStockCount}</Text>
+            <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              Total:{' '}
+              <Text style={[styles.summaryValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                {products.length}
               </Text>
-            </>
-          ) : null}
-
-          {outOfStockCount > 0 ? (
-            <>
-              <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
-              <Text style={[styles.summaryLabel, { color: '#EF4444' }]}>
-                Habis: <Text style={[styles.summaryValue, { color: '#EF4444' }]}>{outOfStockCount}</Text>
+            </Text>
+            <Text
+              style={[
+                styles.summaryDivider,
+                { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' },
+              ]}
+            >
+              |
+            </Text>
+            <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              Aktif:{' '}
+              <Text style={[styles.summaryValue, { color: isDark ? '#D1F5E8' : '#31572C' }]}>
+                {activeCount}
               </Text>
-            </>
-          ) : null}
-        </View>
-      </View>
+            </Text>
 
-      {/* 8. Product Cards List */}
+            {lowStockCount > 0 ? (
+              <>
+                <Text
+                  style={[
+                    styles.summaryDivider,
+                    { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' },
+                  ]}
+                >
+                  |
+                </Text>
+                <Text style={[styles.summaryLabel, { color: '#D97706' }]}>
+                  Menipis:{' '}
+                  <Text style={[styles.summaryValue, { color: '#D97706' }]}>
+                    {lowStockCount}
+                  </Text>
+                </Text>
+              </>
+            ) : null}
+
+            {outOfStockCount > 0 ? (
+              <>
+                <Text
+                  style={[
+                    styles.summaryDivider,
+                    { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' },
+                  ]}
+                >
+                  |
+                </Text>
+                <Text style={[styles.summaryLabel, { color: '#EF4444' }]}>
+                  Habis:{' '}
+                  <Text style={[styles.summaryValue, { color: '#EF4444' }]}>
+                    {outOfStockCount}
+                  </Text>
+                </Text>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </FadeInUp>
+
+      {/* 6. Product Cards List */}
       <ScrollView
         contentContainerStyle={[styles.listContent, { paddingBottom: bottomSpace }]}
         showsVerticalScrollIndicator={false}
@@ -353,168 +402,23 @@ export function ProductsScreen() {
             }}
           />
         ) : (
-          products.map((product) => {
-            const isLow = product.stock > 0 && product.stock <= product.minStockAlert;
-            const isOut = product.stock === 0;
-
-            return (
-              <Card
-                key={product.id}
-                sheen
-                variant="elevated"
-                style={[
-                  styles.productCard,
-                  {
-                    backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
-                    borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
-                  },
-                ]}
+          products.map((product, index) => (
+            <FadeInUp key={product.id} delay={110 + Math.min(index, 6) * 35}>
+              <ProductCard
+                product={product}
                 onPress={() => setDetailProduct(product)}
-              >
-                <View style={styles.productTopRow}>
-                  {/* Thumbnail Image */}
-                  <Image
-                    source={resolveProductImage(product.image, product.name)}
-                    style={[
-                      styles.productImage,
-                      {
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F8FAF8',
-                        borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
-                      },
-                    ]}
-                    resizeMode="cover"
-                  />
-
-                  {/* Metadata and Price */}
-                  <View style={styles.productInfo}>
-                    <View style={styles.categoryAndBadge}>
-                      <Text
-                        style={[
-                          styles.productCategory,
-                          { color: isDark ? '#D1F5E8' : '#64746A' },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {product.category}
-                      </Text>
-                      <Badge variant={getStatusBadgeVariant(product.status)} size="sm" dot>
-                        {product.status}
-                      </Badge>
-                    </View>
-
-                    <Text
-                      style={[
-                        styles.productName,
-                        { color: isDark ? '#FFFFFF' : '#183326' },
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {product.name}
-                    </Text>
-
-                    <Text style={[styles.skuText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
-                      SKU: {product.sku} {product.unit ? `· ${product.unit}` : ''}
-                    </Text>
-
-                    <Text
-                      style={[
-                        styles.productPrice,
-                        { color: isDark ? '#ECF39E' : themeColors.primaryDark },
-                      ]}
-                    >
-                      {formatRupiah(product.price)}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Stock Warning Strip */}
-                {isLow ? (
-                  <View
-                    style={[
-                      styles.warningStrip,
-                      {
-                        backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : '#FEF9E7',
-                        borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#FDE68A',
-                      },
-                    ]}
-                  >
-                    <AlertTriangle size={13} color="#D97706" />
-                    <Text style={styles.warningStripText}>
-                      Stok menipis! Sisa {product.stock} {product.unit} (Alert: {product.minStockAlert})
-                    </Text>
-                  </View>
-                ) : isOut ? (
-                  <View
-                    style={[
-                      styles.warningStrip,
-                      styles.dangerStrip,
-                      {
-                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2',
-                        borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : '#FECDD3',
-                      },
-                    ]}
-                  >
-                    <AlertTriangle size={13} color="#EF4444" />
-                    <Text style={[styles.warningStripText, styles.dangerStripText]}>
-                      Stok habis! Pembeli tidak dapat memesan produk ini.
-                    </Text>
-                  </View>
-                ) : null}
-
-                {/* Card Action Footer */}
-                <View
-                  style={[
-                    styles.cardFooter,
-                    { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#EFF4F0' },
-                  ]}
-                >
-                  <Text style={[styles.stockFooterText, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
-                    Stok:{' '}
-                    <Text style={[styles.stockBold, { color: isDark ? '#FFFFFF' : '#183326' }]}>
-                      {product.stock}
-                    </Text>{' '}
-                    · Terjual:{' '}
-                    <Text style={[styles.stockBold, { color: isDark ? '#FFFFFF' : '#183326' }]}>
-                      {product.soldCount}
-                    </Text>
-                  </Text>
-
-                  {/* Grouped Management Action Buttons */}
-                  <View style={styles.actionButtonsRow}>
-                    <IconButton
-                      icon={<Boxes size={15} color={isDark ? '#D1F5E8' : '#31572C'} />}
-                      variant="softMint"
-                      size="sm"
-                      accessibilityLabel="Ubah stok"
-                      onPress={() => {
-                        setStockModalProduct(product);
-                        setNewStockInput(String(product.stock));
-                      }}
-                    />
-
-                    <IconButton
-                      icon={<Edit2 size={15} color={isDark ? '#D1F5E8' : '#31572C'} />}
-                      variant="secondary"
-                      size="sm"
-                      accessibilityLabel="Edit produk"
-                      onPress={() => {
-                        setEditingProduct(product);
-                        setIsAddModalOpen(true);
-                      }}
-                    />
-
-                    <IconButton
-                      icon={<Trash2 size={15} color="#EF4444" />}
-                      variant="danger"
-                      size="sm"
-                      accessibilityLabel="Hapus produk"
-                      onPress={() => setDeleteTargetProduct(product)}
-                    />
-                  </View>
-                </View>
-              </Card>
-            );
-          })
+                onUpdateStock={() => {
+                  setStockModalProduct(product);
+                  setNewStockInput(String(product.stock));
+                }}
+                onEdit={() => {
+                  setEditingProduct(product);
+                  setIsAddModalOpen(true);
+                }}
+                onDelete={() => setDeleteTargetProduct(product)}
+              />
+            </FadeInUp>
+          ))
         )}
       </ScrollView>
 
@@ -547,7 +451,7 @@ export function ProductsScreen() {
                   Detail Produk
                 </Text>
               </View>
-              <TouchableOpacity
+              <PressableScale
                 onPress={() => setDetailProduct(null)}
                 style={[
                   styles.closeBtn,
@@ -559,7 +463,7 @@ export function ProductsScreen() {
                 accessibilityLabel="Tutup detail produk"
               >
                 <X size={18} color={isDark ? '#D1F5E8' : '#64746A'} />
-              </TouchableOpacity>
+              </PressableScale>
             </View>
 
             {detailProduct && (
@@ -792,6 +696,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
   },
+  decorativeOrbMiddleLeft: {
+    position: 'absolute',
+    top: 360,
+    left: -80,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    overflow: 'hidden',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -882,102 +795,6 @@ const styles = StyleSheet.create({
   },
   loadingState: {
     paddingVertical: 40,
-  },
-  productCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 14,
-    gap: 10,
-    shadowColor: '#183326',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  productTopRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  productImage: {
-    width: 86,
-    height: 86,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  productInfo: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  categoryAndBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  productCategory: {
-    fontSize: 11,
-    fontFamily: typography.fontFamily.medium,
-    flex: 1,
-    marginRight: 6,
-  },
-  productName: {
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: typography.fontFamily.bold,
-    lineHeight: 19,
-    marginBottom: 2,
-  },
-  skuText: {
-    fontSize: 11,
-    fontFamily: typography.fontFamily.regular,
-    marginBottom: 4,
-  },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: '800',
-    fontFamily: typography.fontFamily.extrabold,
-    letterSpacing: -0.2,
-  },
-  warningStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  warningStripText: {
-    fontSize: 11,
-    color: '#D97706',
-    fontFamily: typography.fontFamily.semibold,
-    flex: 1,
-  },
-  dangerStrip: {
-    borderColor: '#FECDD3',
-  },
-  dangerStripText: {
-    color: '#EF4444',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-  },
-  stockFooterText: {
-    fontSize: 11.5,
-    fontFamily: typography.fontFamily.regular,
-  },
-  stockBold: {
-    fontWeight: '700',
-    fontFamily: typography.fontFamily.bold,
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   modalBackdrop: {
     flex: 1,

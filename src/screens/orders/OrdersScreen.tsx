@@ -8,7 +8,7 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useOrderStore } from '@/store/useOrderStore';
 import { OrderFilterTab, Order, OrderStatus } from '@/types';
@@ -21,6 +21,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { ConfirmationModal } from '@/components/common/ConfirmationModal';
 import { SearchInput } from '@/components/forms/SearchInput';
 import { Input } from '@/components/forms/Input';
+import { FadeInUp } from '@/components/common/Motion';
 import { formatRupiah, formatDate } from '@/utils/formatters';
 import { resolveProductImage } from '@/utils/productImage';
 import { typography } from '@/theme/typography';
@@ -51,7 +52,8 @@ const TABS: { key: OrderFilterTab; label: string }[] = [
 
 export function OrdersScreen() {
   const { colors: themeColors, isDark } = useTheme();
-  const bottomSpace = useBottomTabSpace(24);
+  const insets = useSafeAreaInsets();
+  const bottomSpace = useBottomTabSpace(28);
 
   const {
     orders,
@@ -210,105 +212,111 @@ export function OrdersScreen() {
       </View>
 
       {/* 3. Screen Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
-            borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
-          },
-        ]}
-      >
-        {/* Hairline top sheen */}
+      <FadeInUp delay={0}>
         <View
           style={[
-            styles.sheenLine,
+            styles.header,
             {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.18)'
-                : 'rgba(255, 255, 255, 0.95)',
-            },
-          ]}
-        />
-        <View style={styles.titleCol}>
-          <Text
-            style={[
-              styles.eyebrow,
-              { color: isDark ? themeColors.mint : themeColors.primary },
-            ]}
-          >
-            TRANSAKSI & PENGIRIMAN
-          </Text>
-          <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
-            Pesanan Masuk
-          </Text>
-          <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
-            Pantau pesanan, proses resi pengiriman, & konfirmasi transaksi
-          </Text>
-        </View>
-      </View>
-
-      {/* 4. Search Input */}
-      <View style={styles.searchContainer}>
-        <SearchInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Cari no. pesanan, nama pembeli, produk..."
-          variant="glass"
-        />
-      </View>
-
-      {/* 5. Status Filter Tabs */}
-      <View style={styles.tabsSection}>
-        <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
-          {TABS.map((tab) => {
-            const isSelected = activeTab === tab.key;
-            return (
-              <FilterChip
-                key={tab.key}
-                label={tab.label}
-                selected={isSelected}
-                count={getTabCount(tab.key)}
-                size="sm"
-                onPress={() => setActiveTab(tab.key)}
-              />
-            );
-          })}
-        </FilterChipGroup>
-      </View>
-
-      {/* 6. Quick Orders KPI Summary Bar */}
-      <View style={styles.summaryBar}>
-        <View
-          style={[
-            styles.summaryPill,
-            {
-              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
-              borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
+              borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
             },
           ]}
         >
-          <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
-            Total: <Text style={[styles.summaryValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>{orders.length}</Text>
-          </Text>
-          <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
-          <Text style={[styles.summaryLabel, { color: isDark ? '#93C5FD' : '#2563EB' }]}>
-            Diproses: <Text style={[styles.summaryValue, { color: isDark ? '#93C5FD' : '#2563EB' }]}>{processingCount}</Text>
-          </Text>
-          <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
-          <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#31572C' }]}>
-            Dikirim: <Text style={[styles.summaryValue, { color: isDark ? '#D1F5E8' : '#31572C' }]}>{shippedCount}</Text>
-          </Text>
-          {unpaidCount > 0 ? (
-            <>
-              <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
-              <Text style={[styles.summaryLabel, { color: '#D97706' }]}>
-                Unpaid: <Text style={[styles.summaryValue, { color: '#D97706' }]}>{unpaidCount}</Text>
-              </Text>
-            </>
-          ) : null}
+          {/* Hairline top sheen */}
+          <View
+            style={[
+              styles.sheenLine,
+              {
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.18)'
+                  : 'rgba(255, 255, 255, 0.95)',
+              },
+            ]}
+          />
+          <View style={styles.titleCol}>
+            <Text
+              style={[
+                styles.eyebrow,
+                { color: isDark ? themeColors.mint : themeColors.primary },
+              ]}
+            >
+              TRANSAKSI & PENGIRIMAN
+            </Text>
+            <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+              Pesanan Masuk
+            </Text>
+            <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              Pantau pesanan, proses resi pengiriman, & konfirmasi transaksi
+            </Text>
+          </View>
         </View>
-      </View>
+      </FadeInUp>
+
+      {/* 4. Search Input */}
+      <FadeInUp delay={40}>
+        <View style={styles.searchContainer}>
+          <SearchInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Cari no. pesanan, nama pembeli, produk..."
+            variant="glass"
+          />
+        </View>
+
+        {/* 5. Status Filter Tabs */}
+        <View style={styles.tabsSection}>
+          <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
+            {TABS.map((tab) => {
+              const isSelected = activeTab === tab.key;
+              return (
+                <FilterChip
+                  key={tab.key}
+                  label={tab.label}
+                  selected={isSelected}
+                  count={getTabCount(tab.key)}
+                  size="sm"
+                  onPress={() => setActiveTab(tab.key)}
+                />
+              );
+            })}
+          </FilterChipGroup>
+        </View>
+      </FadeInUp>
+
+      {/* 6. Quick Orders KPI Summary Bar */}
+      <FadeInUp delay={70}>
+        <View style={styles.summaryBar}>
+          <View
+            style={[
+              styles.summaryPill,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+              },
+            ]}
+          >
+            <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              Total: <Text style={[styles.summaryValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>{orders.length}</Text>
+            </Text>
+            <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
+            <Text style={[styles.summaryLabel, { color: isDark ? '#93C5FD' : '#2563EB' }]}>
+              Diproses: <Text style={[styles.summaryValue, { color: isDark ? '#93C5FD' : '#2563EB' }]}>{processingCount}</Text>
+            </Text>
+            <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
+            <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#31572C' }]}>
+              Dikirim: <Text style={[styles.summaryValue, { color: isDark ? '#D1F5E8' : '#31572C' }]}>{shippedCount}</Text>
+            </Text>
+            {unpaidCount > 0 ? (
+              <>
+                <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
+                <Text style={[styles.summaryLabel, { color: '#D97706' }]}>
+                  Unpaid: <Text style={[styles.summaryValue, { color: '#D97706' }]}>{unpaidCount}</Text>
+                </Text>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </FadeInUp>
 
       {/* 7. Orders List */}
       <ScrollView
@@ -324,84 +332,116 @@ export function OrdersScreen() {
             description="Tidak ada pesanan yang sesuai dengan filter atau kata kunci pencarian yang dipilih."
           />
         ) : (
-          orders.map((order) => {
+          orders.map((order, index) => {
             const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
             const extraItemsCount = order.items ? order.items.length - 1 : 0;
 
             return (
-              <Card
-                key={order.id}
-                sheen
-                variant="elevated"
-                style={[
-                  styles.orderCard,
-                  {
-                    backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
-                    borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
-                  },
-                ]}
-                onPress={() => setSelectedOrderReceipt(order)}
-              >
-                {/* Header: ID, Date & Status */}
-                <View style={styles.orderCardHeader}>
-                  <View style={styles.orderHeaderLeft}>
-                    <Text
-                      style={[
-                        styles.orderNumber,
-                        { color: isDark ? '#FFFFFF' : '#183326' },
-                      ]}
-                    >
-                      {order.orderNumber || order.id}
-                    </Text>
-                    <View style={styles.clockRow}>
-                      <Clock size={11} color={isDark ? '#8BA899' : '#7E9180'} />
-                      <Text style={[styles.orderDate, { color: isDark ? '#8BA899' : '#7E9180' }]}>
-                        {formatDate(order.createdAt)}
+              <FadeInUp key={order.id} delay={100 + Math.min(index, 6) * 35}>
+                <Card
+                  sheen
+                  variant="elevated"
+                  style={[
+                    styles.orderCard,
+                    {
+                      backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
+                      borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+                    },
+                  ]}
+                  onPress={() => setSelectedOrderReceipt(order)}
+                >
+                  {/* Header: ID, Date & Status */}
+                  <View style={styles.orderCardHeader}>
+                    <View style={styles.orderHeaderLeft}>
+                      <Text
+                        style={[
+                          styles.orderNumber,
+                          { color: isDark ? '#FFFFFF' : '#183326' },
+                        ]}
+                      >
+                        {order.orderNumber || order.id}
+                      </Text>
+                      <View style={styles.clockRow}>
+                        <Clock size={11} color={isDark ? '#8BA899' : '#7E9180'} />
+                        <Text style={[styles.orderDate, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                          {formatDate(order.createdAt)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Badge variant={getStatusBadgeVariant(order.status)} size="sm" dot>
+                      {order.status}
+                    </Badge>
+                  </View>
+
+                  {/* Buyer & Logistics Block — Clear Separated Regions */}
+                  <View
+                    style={[
+                      styles.buyerInfoBlock,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F9FAF7',
+                        borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EAF0EB',
+                      },
+                    ]}
+                  >
+                    {/* Region 1: Buyer Identity */}
+                    <View style={styles.buyerIdentityRow}>
+                      <View style={styles.buyerIdentityLeft}>
+                        <View
+                          style={[
+                            styles.buyerIconWrap,
+                            {
+                              backgroundColor: isDark
+                                ? 'rgba(64, 145, 108, 0.22)'
+                                : '#EAF5EE',
+                            },
+                          ]}
+                        >
+                          <User size={12} color={isDark ? '#D1F5E8' : '#2D6A4F'} />
+                        </View>
+                        <Text
+                          style={[
+                            styles.buyerName,
+                            { color: isDark ? '#FFFFFF' : '#183326' },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {order.buyerName}
+                        </Text>
+                      </View>
+
+                      {order.buyerPhone ? (
+                        <View style={styles.buyerPhoneBadge}>
+                          <Phone size={10} color={isDark ? '#8BA899' : '#64746A'} />
+                          <Text
+                            style={[
+                              styles.buyerPhoneText,
+                              { color: isDark ? '#8BA899' : '#64746A' },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {order.buyerPhone}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    {/* Region 2: Delivery Address */}
+                    <View style={styles.buyerAddressRow}>
+                      <View style={styles.addressIconWrap}>
+                        <MapPin size={11} color={isDark ? '#8BA899' : '#7E9180'} />
+                      </View>
+                      <Text
+                        style={[
+                          styles.addressText,
+                          { color: isDark ? '#D1F5E8' : '#55655B' },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {order.buyerAddress}
                       </Text>
                     </View>
                   </View>
-
-                  <Badge variant={getStatusBadgeVariant(order.status)} size="sm" dot>
-                    {order.status}
-                  </Badge>
-                </View>
-
-                {/* Buyer & Logistics Strip */}
-                <View
-                  style={[
-                    styles.buyerStrip,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F9FAF7',
-                      borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EAF0EB',
-                    },
-                  ]}
-                >
-                  <View style={styles.buyerItem}>
-                    <User size={13} color={isDark ? '#D1F5E8' : '#40916C'} />
-                    <Text
-                      style={[
-                        styles.buyerName,
-                        { color: isDark ? '#FFFFFF' : '#183326' },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {order.buyerName}
-                    </Text>
-                  </View>
-
-                  <View style={styles.locationItem}>
-                    <MapPin size={11} color={isDark ? '#8BA899' : '#7E9180'} />
-                    <Text
-                      style={[
-                        styles.addressText,
-                        { color: isDark ? '#D1F5E8' : '#64746A' },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {order.buyerAddress}
-                    </Text>
-                  </View>
-                </View>
 
                 {/* Product Summary Row */}
                 {firstItem ? (
@@ -530,8 +570,9 @@ export function OrdersScreen() {
                   </View>
                 </View>
               </Card>
-            );
-          })
+            </FadeInUp>
+          );
+        })
         )}
       </ScrollView>
 
@@ -669,7 +710,13 @@ export function OrdersScreen() {
             </View>
 
             {selectedOrderReceipt ? (
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.detailContent}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[
+                  styles.detailContent,
+                  { paddingBottom: Math.max(insets.bottom, 24) },
+                ]}
+              >
                 {/* 1. Status Banner Card */}
                 <View
                   style={[
@@ -1114,38 +1161,68 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: typography.fontFamily.regular,
   },
-  buyerStrip: {
+  buyerInfoBlock: {
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 6,
+  },
+  buyerIdentityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
     gap: 8,
   },
-  buyerItem: {
+  buyerIdentityLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 7,
+    flex: 1,
+    minWidth: 0,
+  },
+  buyerIconWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
-    maxWidth: '48%',
   },
   buyerName: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    fontFamily: typography.fontFamily.semibold,
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    flexShrink: 1,
   },
-  locationItem: {
+  buyerPhoneBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    flex: 1,
-    justifyContent: 'flex-end',
+    flexShrink: 0,
+  },
+  buyerPhoneText: {
+    fontSize: 10.5,
+    fontFamily: typography.fontFamily.medium,
+  },
+  buyerAddressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minWidth: 0,
+  },
+  addressIconWrap: {
+    width: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   addressText: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontFamily: typography.fontFamily.regular,
+    flex: 1,
+    flexShrink: 1,
+    lineHeight: 15,
   },
   productSummaryRow: {
     flexDirection: 'row',

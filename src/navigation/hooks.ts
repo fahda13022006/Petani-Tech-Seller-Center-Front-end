@@ -14,11 +14,14 @@ export const useSellerNavigation = () => useNavigation<SellerNavigationProp>();
 
 export const BOTTOM_TAB_HEIGHT = 66;
 
-export function useBottomTabSpace(extraPadding = 16): number {
+export function useBottomTabSpace(extraPadding = 28): number {
   const insets = useSafeAreaInsets();
   const tabBottom =
     Platform.OS === 'ios'
       ? Math.max(insets.bottom, 14)
-      : Math.max(insets.bottom, 12);
+      : insets.bottom > 0
+      ? insets.bottom + 8
+      : 14;
   return BOTTOM_TAB_HEIGHT + tabBottom + extraPadding;
 }
+

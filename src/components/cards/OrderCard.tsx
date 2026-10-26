@@ -4,13 +4,13 @@ import {
   Text,
   View,
   Image,
-  TouchableOpacity,
   StyleProp,
   ViewStyle,
 } from 'react-native';
 import { Order, OrderStatus } from '@/types/order';
 import { Card } from './Card';
 import { Badge } from '@/components/common/Badge';
+import { PressableScale } from '@/components/common/Motion';
 import { formatRupiah, formatDate } from '@/utils/formatters';
 import { resolveProductImage } from '@/utils/productImage';
 import { typography } from '@/theme/typography';
@@ -94,35 +94,52 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         </Badge>
       </View>
 
-      {/* 2. Buyer & Logistics Strip */}
+      {/* 2. Buyer & Logistics Block — Clear Separated Regions */}
       <View
         style={[
-          styles.buyerStrip,
+          styles.buyerInfoBlock,
           {
             backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F9FAF7',
             borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EAF0EB',
           },
         ]}
       >
-        <View style={styles.buyerItem}>
-          <User size={13} color={isDark ? '#D1F5E8' : '#40916C'} />
-          <Text
-            style={[
-              styles.buyerName,
-              { color: isDark ? '#FFFFFF' : '#183326' },
-            ]}
-            numberOfLines={1}
-          >
-            {order.buyerName}
-          </Text>
+        {/* Region 1: Buyer Identity */}
+        <View style={styles.buyerIdentityRow}>
+          <View style={styles.buyerIdentityLeft}>
+            <View
+              style={[
+                styles.buyerIconWrap,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(64, 145, 108, 0.22)'
+                    : '#EAF5EE',
+                },
+              ]}
+            >
+              <User size={12} color={isDark ? '#D1F5E8' : '#2D6A4F'} />
+            </View>
+            <Text
+              style={[
+                styles.buyerName,
+                { color: isDark ? '#FFFFFF' : '#183326' },
+              ]}
+              numberOfLines={1}
+            >
+              {order.buyerName}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.locationItem}>
-          <MapPin size={12} color={isDark ? '#8BA899' : '#7E9180'} />
+        {/* Region 2: Delivery Address */}
+        <View style={styles.buyerAddressRow}>
+          <View style={styles.addressIconWrap}>
+            <MapPin size={11} color={isDark ? '#8BA899' : '#7E9180'} />
+          </View>
           <Text
             style={[
               styles.addressText,
-              { color: isDark ? '#D1F5E8' : '#64746A' },
+              { color: isDark ? '#D1F5E8' : '#55655B' },
             ]}
             numberOfLines={1}
           >
@@ -205,9 +222,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         </View>
 
         {onActionPress && actionLabel ? (
-          <TouchableOpacity
+          <PressableScale
             onPress={onActionPress}
-            activeOpacity={0.78}
             style={[
               styles.actionButton,
               {
@@ -225,7 +241,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
               {actionLabel}
             </Text>
             <ChevronRight size={14} color={isDark ? '#D1F5E8' : '#31572C'} />
-          </TouchableOpacity>
+          </PressableScale>
         ) : null}
       </View>
     </Card>
@@ -262,38 +278,58 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: typography.fontFamily.regular,
   },
-  buyerStrip: {
+  buyerInfoBlock: {
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 6,
+  },
+  buyerIdentityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
     gap: 8,
   },
-  buyerItem: {
+  buyerIdentityLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 7,
+    flex: 1,
+    minWidth: 0,
+  },
+  buyerIconWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
-    maxWidth: '45%',
   },
   buyerName: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    fontFamily: typography.fontFamily.semibold,
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    flexShrink: 1,
   },
-  locationItem: {
+  buyerAddressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    flex: 1,
-    justifyContent: 'flex-end',
+    gap: 6,
+    minWidth: 0,
+  },
+  addressIconWrap: {
+    width: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   addressText: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontFamily: typography.fontFamily.regular,
+    flex: 1,
+    flexShrink: 1,
+    lineHeight: 15,
   },
   productRow: {
     flexDirection: 'row',

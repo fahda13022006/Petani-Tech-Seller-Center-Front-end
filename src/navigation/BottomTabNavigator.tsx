@@ -38,7 +38,9 @@ export function BottomTabNavigator() {
   const tabBottom =
     Platform.OS === 'ios'
       ? Math.max(insets.bottom, 14)
-      : Math.max(insets.bottom, 12);
+      : insets.bottom > 0
+      ? insets.bottom + 8
+      : 14;
 
   return (
     <Tab.Navigator
