@@ -1,77 +1,232 @@
 import React from 'react';
-import { StyleSheet, Text, View, StyleProp, ViewStyle } from 'react-native';
-import { Order } from '@/types/order';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
+import { Order, OrderStatus } from '@/types/order';
 import { Card } from './Card';
 import { Badge } from '@/components/common/Badge';
 import { formatRupiah, formatDate } from '@/utils/formatters';
-import { colors } from '@/theme/colors';
-import { Truck, User, Calendar } from 'lucide-react-native';
+import { resolveProductImage } from '@/utils/productImage';
+import { typography } from '@/theme/typography';
+import { useTheme } from '@/theme/ThemeContext';
+import { Truck, MapPin, ChevronRight, User } from 'lucide-react-native';
 
 export interface OrderCardProps {
   order: Order;
   onPress?: () => void;
+  onActionPress?: () => void;
+  actionLabel?: string;
   style?: StyleProp<ViewStyle>;
 }
+
+const getOrderStatusBadgeVariant = (
+  status: OrderStatus
+): 'brand' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' => {
+  switch (status) {
+    case 'Menunggu Pembayaran':
+      return 'warning';
+    case 'Diproses':
+      return 'info';
+    case 'Dikirim':
+      return 'brand';
+    case 'Selesai':
+      return 'success';
+    case 'Dibatalkan':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+};
 
 export const OrderCard: React.FC<OrderCardProps> = ({
   order,
   onPress,
+  onActionPress,
+  actionLabel,
   style,
 }) => {
-  const getBadgeVariant = (status: Order['status']) => {
-    switch (status) {
-      case 'Selesai':
-        return 'success';
-      case 'Diproses':
-        return 'info';
-      case 'Dikirim':
-        return 'brand';
-      case 'Menunggu Pembayaran':
-        return 'warning';
-      case 'Dibatalkan':
-        return 'danger';
-      default:
-        return 'neutral';
-    }
-  };
+  const { colors, isDark } = useTheme();
+
+  const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+  const totalItemCount = order.items
+    ? order.items.reduce((acc, i) => acc + i.quantity, 0)
+    : 0;
+  const extraItemsCount = order.items ? order.items.length - 1 : 0;
 
   return (
-    <Card onPress={onPress} style={[styles.card, style]}>
-      {/* Header: Order ID & Status */}
-      <View style={styles.header}>
-        <View style={styles.idCol}>
-          <Text style={styles.orderNumber}>{order.orderNumber || order.id}</Text>
-          <View style={styles.dateRow}>
-            <Calendar size={11} color={colors.neutral[500]} />
-            <Text style={styles.dateText}>{formatDate(order.createdAt)}</Text>
-          </View>
+    <Card
+      onPress={onPress}
+      sheen
+      variant="elevated"
+      style={[
+        styles.card,
+        {
+          backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+        },
+        style,
+      ]}
+    >
+      {/* 1. Header: Order ID, Date & Status */}
+      <View style={styles.headerRow}>
+        <View style={styles.idGroup}>
+          <Text
+            style={[
+              styles.orderNumber,
+              { color: isDark ? '#FFFFFF' : '#183326' },
+            ]}
+          >
+            {order.orderNumber || order.id}
+          </Text>
+          <Text style={[styles.dateText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+            {formatDate(order.createdAt)}
+          </Text>
         </View>
-        <Badge variant={getBadgeVariant(order.status)} size="sm">
+
+        <Badge variant={getOrderStatusBadgeVariant(order.status)} size="sm" dot>
           {order.status}
         </Badge>
       </View>
 
-      {/* Buyer & Courier Info */}
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <User size={13} color={colors.neutral[500]} />
-          <Text style={styles.infoText} numberOfLines={1}>{order.buyerName}</Text>
+      {/* 2. Buyer & Logistics Strip */}
+      <View
+        style={[
+          styles.buyerStrip,
+          {
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F9FAF7',
+            borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : '#EAF0EB',
+          },
+        ]}
+      >
+        <View style={styles.buyerItem}>
+          <User size={13} color={isDark ? '#D1F5E8' : '#40916C'} />
+          <Text
+            style={[
+              styles.buyerName,
+              { color: isDark ? '#FFFFFF' : '#183326' },
+            ]}
+            numberOfLines={1}
+          >
+            {order.buyerName}
+          </Text>
         </View>
-        <View style={styles.infoItem}>
-          <Truck size={13} color={colors.neutral[500]} />
-          <Text style={styles.infoText}>{order.courier}</Text>
+
+        <View style={styles.locationItem}>
+          <MapPin size={12} color={isDark ? '#8BA899' : '#7E9180'} />
+          <Text
+            style={[
+              styles.addressText,
+              { color: isDark ? '#D1F5E8' : '#64746A' },
+            ]}
+            numberOfLines={1}
+          >
+            {order.buyerAddress}
+          </Text>
         </View>
       </View>
 
-      {/* Item Summary & Total */}
-      <View style={styles.footer}>
-        <Text style={styles.itemsSummary}>
-          {order.items.length} Barang ({order.items.reduce((acc, i) => acc + i.quantity, 0)} Pcs)
-        </Text>
-        <View style={styles.totalCol}>
-          <Text style={styles.totalLabel}>Total Pembayaran</Text>
-          <Text style={styles.totalValue}>{formatRupiah(order.totalAmount)}</Text>
+      {/* 3. Product Preview Row */}
+      {firstItem ? (
+        <View style={styles.productRow}>
+          <Image
+            source={resolveProductImage(firstItem.productImage, firstItem.productName)}
+            style={[
+              styles.productImage,
+              {
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F8FAF8',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+              },
+            ]}
+            resizeMode="cover"
+          />
+
+          <View style={styles.productDetails}>
+            <Text
+              style={[
+                styles.productName,
+                { color: isDark ? '#FFFFFF' : '#183326' },
+              ]}
+              numberOfLines={1}
+            >
+              {firstItem.productName}
+            </Text>
+
+            <Text style={[styles.productMeta, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+              {firstItem.quantity} {firstItem.unit || 'unit'} × {formatRupiah(firstItem.unitPrice)}
+            </Text>
+
+            {extraItemsCount > 0 ? (
+              <Text style={[styles.extraCount, { color: isDark ? colors.mint : colors.primary }]}>
+                +{extraItemsCount} produk pertanian lainnya
+              </Text>
+            ) : null}
+          </View>
+
+          <View style={styles.courierBadge}>
+            <Truck size={12} color={isDark ? '#D1F5E8' : '#31572C'} />
+            <Text
+              style={[
+                styles.courierText,
+                { color: isDark ? '#D1F5E8' : '#31572C' },
+              ]}
+              numberOfLines={1}
+            >
+              {order.courier.split(' ')[0]}
+            </Text>
+          </View>
         </View>
+      ) : null}
+
+      {/* 4. Footer: Total Amount & Action CTA */}
+      <View
+        style={[
+          styles.footerRow,
+          { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#EFF4F0' },
+        ]}
+      >
+        <View style={styles.totalCol}>
+          <Text style={[styles.totalLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+            Total Tagihan ({totalItemCount} barang)
+          </Text>
+          <Text
+            style={[
+              styles.totalAmount,
+              { color: isDark ? '#ECF39E' : colors.primaryDark },
+            ]}
+          >
+            {formatRupiah(order.totalAmount)}
+          </Text>
+        </View>
+
+        {onActionPress && actionLabel ? (
+          <TouchableOpacity
+            onPress={onActionPress}
+            activeOpacity={0.78}
+            style={[
+              styles.actionButton,
+              {
+                backgroundColor: isDark ? 'rgba(64, 145, 108, 0.30)' : '#EAF4EE',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.30)' : '#C6E2D0',
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.actionBtnText,
+                { color: isDark ? '#D1F5E8' : '#31572C' },
+              ]}
+            >
+              {actionLabel}
+            </Text>
+            <ChevronRight size={14} color={isDark ? '#D1F5E8' : '#31572C'} />
+          </TouchableOpacity>
+        ) : null}
       </View>
     </Card>
   );
@@ -79,71 +234,142 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    padding: 14,
+    padding: 15,
     marginBottom: 10,
+    borderRadius: 20,
+    borderWidth: 1,
     gap: 10,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
   },
-  idCol: {
-    gap: 3,
+  idGroup: {
+    gap: 2,
   },
   orderNumber: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.neutral[900],
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
   },
   dateText: {
     fontSize: 11,
-    color: colors.neutral[500],
+    fontFamily: typography.fontFamily.regular,
   },
-  infoRow: {
+  buyerStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    paddingVertical: 6,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.neutral[100],
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  infoText: {
-    fontSize: 12,
-    color: colors.neutral[700],
-    fontWeight: '500',
-  },
-  footer: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
   },
-  itemsSummary: {
+  buyerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    flexShrink: 0,
+    maxWidth: '45%',
+  },
+  buyerName: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
+  },
+  locationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  addressText: {
     fontSize: 11,
-    color: colors.neutral[500],
+    fontFamily: typography.fontFamily.regular,
+  },
+  productRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  productImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  productDetails: {
+    flex: 1,
+    gap: 2,
+  },
+  productName: {
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  productMeta: {
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.regular,
+  },
+  extraCount: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
+  },
+  courierBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(64, 145, 108, 0.12)',
+  },
+  courierText: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
   },
   totalCol: {
-    alignItems: 'flex-end',
     gap: 2,
   },
   totalLabel: {
-    fontSize: 10,
-    color: colors.neutral[500],
+    fontSize: 11,
+    fontFamily: typography.fontFamily.regular,
   },
-  totalValue: {
-    fontSize: 14,
+  totalAmount: {
+    fontSize: 15.5,
     fontWeight: '800',
-    color: colors.primary.DEFAULT,
+    fontFamily: typography.fontFamily.extrabold,
+    letterSpacing: -0.3,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
   },
 });

@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/theme/colors';
+import { typography } from '@/theme/typography';
 
 export interface ButtonProps {
   children?: React.ReactNode;
-  variant?: 'primary' | 'gradient' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'softGreen';
+  variant?: 'primary' | 'gradient' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'softGreen' | 'leaf' | 'glass';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   disabled?: boolean;
@@ -52,7 +53,12 @@ export const Button: React.FC<ButtonProps> = ({
         <ActivityIndicator
           size="small"
           color={
-            variant === 'outline' || variant === 'ghost' || variant === 'softGreen'
+            variant === 'outline' ||
+            variant === 'ghost' ||
+            variant === 'secondary' ||
+            variant === 'softGreen' ||
+            variant === 'leaf' ||
+            variant === 'glass'
               ? colors.primary.dark
               : '#FFFFFF'
           }
@@ -81,12 +87,16 @@ export const Button: React.FC<ButtonProps> = ({
     </>
   );
 
+  const hitSlop = size === 'sm' ? { top: 6, bottom: 6, left: 6, right: 6 } : undefined;
+
   if (isGradient) {
     return (
       <TouchableOpacity
-        activeOpacity={0.85}
+        activeOpacity={0.82}
         disabled={isDisabled}
         onPress={onPress}
+        hitSlop={hitSlop}
+        accessibilityRole="button"
         style={[styles.touchableWrapper, isDisabled && styles.disabled, style]}
       >
         <LinearGradient
@@ -103,9 +113,11 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.78}
       disabled={isDisabled}
       onPress={onPress}
+      hitSlop={hitSlop}
+      accessibilityRole="button"
       style={[
         styles.base,
         styles[variant],
@@ -121,11 +133,11 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   touchableWrapper: {
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#32CD32',
+    shadowColor: '#31572C',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.18,
     shadowRadius: 8,
     elevation: 3,
   },
@@ -133,7 +145,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
+    borderRadius: 16,
     gap: 8,
   },
   gradientBase: {
@@ -161,7 +173,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary.DEFAULT,
   },
   secondary: {
-    backgroundColor: colors.neutral[800],
+    backgroundColor: '#F2FBF5',
+    borderWidth: 1.5,
+    borderColor: '#DDE8E0',
   },
   outline: {
     backgroundColor: colors.neutral.white,
@@ -175,15 +189,31 @@ const styles = StyleSheet.create({
     backgroundColor: colors.semantic.danger.DEFAULT,
   },
   softGreen: {
-    backgroundColor: colors.primary.soft,
+    backgroundColor: '#EAF4EE',
     borderWidth: 1,
-    borderColor: colors.primary.border,
+    borderColor: '#C6E2D0',
+  },
+  leaf: {
+    backgroundColor: colors.primary.leaf,
+    borderWidth: 1,
+    borderColor: colors.primary.moss,
+  },
+  glass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderWidth: 1.5,
+    borderColor: '#DDE8E0',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   disabled: {
     opacity: 0.55,
   },
   text: {
     fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
     textAlign: 'center',
     letterSpacing: 0.2,
   },
@@ -203,7 +233,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   secondaryText: {
-    color: '#FFFFFF',
+    color: '#31572C',
   },
   outlineText: {
     color: colors.primary.dark,
@@ -217,6 +247,12 @@ const styles = StyleSheet.create({
   softGreenText: {
     color: colors.primary.dark,
   },
+  leafText: {
+    color: colors.primary.dark,
+  },
+  glassText: {
+    color: '#183326',
+  },
   spinner: {
     marginRight: 4,
   },
@@ -225,4 +261,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-

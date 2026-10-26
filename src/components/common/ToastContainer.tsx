@@ -8,6 +8,8 @@ import {
 import { useToastStore } from '@/store/useToastStore';
 import { Toast, ToastVariant } from '@/types';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react-native';
+import { colors } from '@/theme/colors';
+import { typography } from '@/theme/typography';
 
 const VARIANT_CONFIG: Record<
   ToastVariant,
@@ -19,23 +21,23 @@ const VARIANT_CONFIG: Record<
 > = {
   success: {
     icon: (color) => <CheckCircle2 size={18} color={color} />,
-    color: '#4C9B52',
-    bgColor: '#EAF6EB',
+    color: colors.primary.DEFAULT,
+    bgColor: '#EAF4EE',
   },
   error: {
     icon: (color) => <XCircle size={18} color={color} />,
-    color: '#D95757',
-    bgColor: '#FDF0F0',
+    color: colors.semantic.danger.DEFAULT,
+    bgColor: '#FFF1F2',
   },
   warning: {
     icon: (color) => <AlertTriangle size={18} color={color} />,
-    color: '#E9A23B',
-    bgColor: '#FFF8E7',
+    color: '#D97706',
+    bgColor: '#FFFBEB',
   },
   info: {
     icon: (color) => <Info size={18} color={color} />,
-    color: '#4C89C6',
-    bgColor: '#EDF5FD',
+    color: '#2563EB',
+    bgColor: '#EFF6FF',
   },
 };
 
@@ -59,7 +61,7 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={styles.closeBtn}
       >
-        <X size={16} color="#8E8E8E" />
+        <X size={16} color={colors.neutral[400]} />
       </TouchableOpacity>
     </View>
   );
@@ -92,22 +94,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E8ECE7',
+    borderColor: '#E6EDE7',
     borderLeftWidth: 4,
     padding: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#1B261D',
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 8,
     elevation: 4,
     gap: 10,
   },
   iconContainer: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -118,11 +120,13 @@ const styles = StyleSheet.create({
   toastTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#213329',
+    fontFamily: typography.fontFamily.bold,
+    color: colors.neutral[900],
   },
   toastMessage: {
-    fontSize: 11,
-    color: '#68746B',
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.neutral[600],
   },
   closeBtn: {
     padding: 4,

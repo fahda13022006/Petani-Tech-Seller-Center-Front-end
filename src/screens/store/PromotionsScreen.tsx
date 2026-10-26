@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   ScrollView,
@@ -10,13 +9,17 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { promotionService } from '@/services/promotionService';
 import { Promotion, PromotionType } from '@/types';
-import { Card } from '@/components/common/Card';
+import { Card } from '@/components/cards/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
 import { EmptyState } from '@/components/common/EmptyState';
+import { Input } from '@/components/forms/Input';
 import { formatRupiah } from '@/constants';
+import { colors } from '@/theme/colors';
+import { useTheme } from '@/theme';
 import {
   Plus,
   Tag,
@@ -29,6 +32,7 @@ import {
 const PROMO_TYPES: PromotionType[] = ['Diskon Produk', 'Voucher', 'Campaign'];
 
 export function PromotionsScreen() {
+  const { themeColors, isDarkMode } = useTheme();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'Diskon Produk' | 'Voucher' | 'Campaign'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -102,12 +106,17 @@ export function PromotionsScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={themeColors.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.header}
+      >
         <View style={styles.titleCol}>
-          <Text style={styles.screenTitle}>Promosi & Voucher</Text>
-          <Text style={styles.screenSubtitle}>
+          <Text style={[styles.screenTitle, { color: themeColors.textPrimary }]}>Promosi & Voucher</Text>
+          <Text style={[styles.screenSubtitle, { color: themeColors.textSecondary }]}>
             Tingkatkan omset toko dengan diskon pupuk dan voucher subsidi ongkir
           </Text>
         </View>
@@ -119,34 +128,54 @@ export function PromotionsScreen() {
         >
           Buat
         </Button>
-      </View>
+      </LinearGradient>
 
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <View
+        style={[
+          styles.tabsContainer,
+          {
+            backgroundColor: themeColors.background,
+            borderBottomColor: themeColors.divider,
+          },
+        ]}
+      >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsContent}
         >
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              style={[
-                styles.tabChip,
-                activeTab === tab.key && styles.tabChipActive,
-              ]}
-            >
-              <Text
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key)}
                 style={[
-                  styles.tabChipText,
-                  activeTab === tab.key && styles.tabChipTextActive,
+                  styles.tabChip,
+                  {
+                    backgroundColor: themeColors.cardBackground,
+                    borderColor: themeColors.cardBorder,
+                  },
+                  isActive && {
+                    backgroundColor: themeColors.primary,
+                    borderColor: themeColors.primary,
+                  },
                 ]}
+                activeOpacity={0.75}
               >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.tabChipText,
+                    { color: themeColors.textSecondary },
+                    isActive && styles.tabChipTextActive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
@@ -160,9 +189,9 @@ export function PromotionsScreen() {
             <Flame size={20} color="#FFFFFF" />
           </View>
           <View style={styles.bannerText}>
-            <Text style={styles.bannerTitle}>Campaign Musim Tanam Padi</Text>
+            <Text style={styles.bannerTitle}>Campaign Musim Tanam Rendeng</Text>
             <Text style={styles.bannerSub}>
-              Subsidi komisi 1% untuk produk benih dan pupuk organik SNI.
+              Subsidi komisi 1% untuk produk benih dan pupuk organik wilayah Indramayu & Pantura.
             </Text>
           </View>
         </Card>
@@ -185,17 +214,39 @@ export function PromotionsScreen() {
               : 0;
 
             return (
-              <Card key={promo.id} style={styles.promoCard}>
+              <Card
+                key={promo.id}
+                style={[
+                  styles.promoCard,
+                  {
+                    backgroundColor: themeColors.cardBackground,
+                    borderColor: themeColors.cardBorder,
+                  },
+                ]}
+              >
                 <View style={styles.promoHeader}>
                   <View style={styles.promoHeaderLeft}>
-                    <View style={styles.promoTypeTag}>
-                      <Tag size={12} color="#15803D" />
-                      <Text style={styles.promoTypeText}>{promo.type}</Text>
+                    <View
+                      style={[
+                        styles.promoTypeTag,
+                        {
+                          backgroundColor: isDarkMode
+                            ? 'rgba(64, 145, 108, 0.2)'
+                            : '#EAF4EE',
+                        },
+                      ]}
+                    >
+                      <Tag size={12} color={themeColors.accent} />
+                      <Text style={[styles.promoTypeText, { color: themeColors.accent }]}>
+                        {promo.type}
+                      </Text>
                     </View>
-                    <Text style={styles.promoName}>{promo.name}</Text>
+                    <Text style={[styles.promoName, { color: themeColors.textPrimary }]}>
+                      {promo.name}
+                    </Text>
                   </View>
                   <Badge
-                    variant={promo.status === 'Aktif' ? 'success' : 'neutral'}
+                    variant={promo.status === 'Aktif' ? 'brand' : 'neutral'}
                     size="sm"
                   >
                     {promo.status}
@@ -204,14 +255,23 @@ export function PromotionsScreen() {
 
                 {/* Promo Details */}
                 <View style={styles.promoDetailsRow}>
-                  <View style={styles.discountBadge}>
-                    <Percent size={14} color="#15803D" />
-                    <Text style={styles.discountText}>
+                  <View
+                    style={[
+                      styles.discountBadge,
+                      {
+                        backgroundColor: isDarkMode
+                          ? 'rgba(64, 145, 108, 0.2)'
+                          : '#EAF4EE',
+                      },
+                    ]}
+                  >
+                    <Percent size={14} color={themeColors.accent} />
+                    <Text style={[styles.discountText, { color: themeColors.accent }]}>
                       Diskon {promo.discountValue}%
                     </Text>
                   </View>
 
-                  <Text style={styles.minPurchaseText}>
+                  <Text style={[styles.minPurchaseText, { color: themeColors.textSecondary }]}>
                     Min. Belanja {formatRupiah(promo.minPurchase || 0)}
                   </Text>
                 </View>
@@ -219,22 +279,41 @@ export function PromotionsScreen() {
                 {/* Quota Progress */}
                 <View style={styles.quotaSection}>
                   <View style={styles.quotaHeader}>
-                    <Text style={styles.quotaLabel}>Kuota Terpakai</Text>
-                    <Text style={styles.quotaValue}>
+                    <Text style={[styles.quotaLabel, { color: themeColors.textMuted }]}>
+                      Kuota Terpakai
+                    </Text>
+                    <Text style={[styles.quotaValue, { color: themeColors.textPrimary }]}>
                       {promo.usedCount} / {promo.totalQuota} ({usagePercent}%)
                     </Text>
                   </View>
-                  <View style={styles.progressBarBg}>
+                  <View
+                    style={[
+                      styles.progressBarBg,
+                      {
+                        backgroundColor: isDarkMode
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : '#F0F5F1',
+                      },
+                    ]}
+                  >
                     <View
-                      style={[styles.progressBarFill, { width: `${usagePercent}%` }]}
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${usagePercent}%`, backgroundColor: themeColors.accent },
+                      ]}
                     />
                   </View>
                 </View>
 
                 {/* Date Footer */}
-                <View style={styles.dateFooter}>
-                  <Calendar size={12} color="#818981" />
-                  <Text style={styles.dateText}>
+                <View
+                  style={[
+                    styles.dateFooter,
+                    { borderTopColor: themeColors.divider },
+                  ]}
+                >
+                  <Calendar size={12} color={themeColors.textMuted} />
+                  <Text style={[styles.dateText, { color: themeColors.textMuted }]}>
                     Periode: {promo.startDate} s/d {promo.endDate}
                   </Text>
                 </View>
@@ -252,65 +331,89 @@ export function PromotionsScreen() {
         onRequestClose={() => setIsCreateModalOpen(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalBox}>
+          <View
+            style={[
+              styles.modalBox,
+              {
+                backgroundColor: themeColors.modalBackground,
+                borderColor: themeColors.modalBorder,
+                borderWidth: 1,
+              },
+            ]}
+          >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Buat Promosi Toko Baru</Text>
-              <TouchableOpacity onPress={() => setIsCreateModalOpen(false)}>
-                <X size={20} color="#818981" />
+              <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>
+                Buat Promosi Toko Baru
+              </Text>
+              <TouchableOpacity
+                onPress={() => setIsCreateModalOpen(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <X size={20} color={themeColors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={{ marginTop: 8 }} keyboardShouldPersistTaps="handled">
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Nama Promosi / Diskon</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={promoName}
-                  onChangeText={setPromoName}
-                  placeholder="Contoh: Diskon Pupuk Olah Tanah 20%"
-                />
-              </View>
+              <Input
+                label="Nama Promosi / Diskon"
+                value={promoName}
+                onChangeText={setPromoName}
+                placeholder="Contoh: Diskon Pupuk Olah Tanah 20%"
+                containerStyle={{ marginBottom: 12 }}
+              />
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Tipe Promosi</Text>
+                <Text style={[styles.formLabel, { color: themeColors.textSecondary }]}>
+                  Tipe Promosi
+                </Text>
                 <View style={styles.typeChipsRow}>
-                  {PROMO_TYPES.map((t) => (
-                    <TouchableOpacity
-                      key={t}
-                      onPress={() => setPromoType(t)}
-                      style={[
-                        styles.typeChip,
-                        promoType === t && styles.typeChipActive,
-                      ]}
-                    >
-                      <Text
+                  {PROMO_TYPES.map((t) => {
+                    const isActive = promoType === t;
+                    return (
+                      <TouchableOpacity
+                        key={t}
+                        onPress={() => setPromoType(t)}
                         style={[
-                          styles.typeChipText,
-                          promoType === t && styles.typeChipTextActive,
+                          styles.typeChip,
+                          {
+                            backgroundColor: themeColors.cardBackgroundSecondary,
+                            borderColor: themeColors.cardBorder,
+                          },
+                          isActive && {
+                            backgroundColor: themeColors.primary,
+                            borderColor: themeColors.primary,
+                          },
                         ]}
+                        activeOpacity={0.75}
                       >
-                        {t}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          style={[
+                            styles.typeChipText,
+                            { color: themeColors.textSecondary },
+                            isActive && styles.typeChipTextActive,
+                          ]}
+                        >
+                          {t}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
               <View style={styles.formRow}>
-                <View style={[styles.formGroup, { flex: 1 }]}>
-                  <Text style={styles.formLabel}>Diskon (%)</Text>
-                  <TextInput
-                    style={styles.formInput}
+                <View style={{ flex: 1 }}>
+                  <Input
+                    label="Diskon (%)"
                     value={discountValue}
                     onChangeText={setDiscountValue}
                     keyboardType="numeric"
                     placeholder="20"
                   />
                 </View>
-                <View style={[styles.formGroup, { flex: 1 }]}>
-                  <Text style={styles.formLabel}>Kuota Voucher</Text>
-                  <TextInput
-                    style={styles.formInput}
+                <View style={{ flex: 1 }}>
+                  <Input
+                    label="Kuota Voucher"
                     value={quota}
                     onChangeText={setQuota}
                     keyboardType="numeric"
@@ -319,16 +422,14 @@ export function PromotionsScreen() {
                 </View>
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Minimum Pembelian (Rp)</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={minPurchase}
-                  onChangeText={setMinPurchase}
-                  keyboardType="numeric"
-                  placeholder="100000"
-                />
-              </View>
+              <Input
+                label="Minimum Pembelian (Rp)"
+                value={minPurchase}
+                onChangeText={setMinPurchase}
+                keyboardType="numeric"
+                placeholder="100000"
+                containerStyle={{ marginTop: 12 }}
+              />
 
               <View style={styles.modalActions}>
                 <Button
@@ -359,9 +460,8 @@ export function PromotionsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAF9F6',
   },
-
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -375,13 +475,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   screenTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
-    color: '#213329',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
+    letterSpacing: -0.3,
   },
   screenSubtitle: {
     fontSize: 12,
-    color: '#818981',
+    color: colors.neutral[600],
+    fontFamily: 'Poppins, sans-serif',
   },
   tabsContainer: {
     paddingVertical: 6,
@@ -393,19 +496,20 @@ const styles = StyleSheet.create({
   tabChip: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 12,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E8ECE7',
+    borderColor: '#E6EDE7',
   },
   tabChipActive: {
-    backgroundColor: '#32CD32',
-    borderColor: '#32CD32',
+    backgroundColor: colors.primary.DEFAULT,
+    borderColor: colors.primary.DEFAULT,
   },
   tabChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[600],
   },
   tabChipTextActive: {
     color: '#FFFFFF',
@@ -419,15 +523,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 14,
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
+    padding: 16,
+    backgroundColor: '#EAF4EE',
+    borderColor: '#C3DBC7',
+    borderRadius: 20,
   },
   bannerIconBox: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#32CD32',
+    backgroundColor: colors.primary.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -437,17 +542,23 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     fontSize: 13,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontWeight: '700',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   bannerSub: {
     fontSize: 11,
-    color: '#64748B',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[600],
+    lineHeight: 16,
   },
-
   promoCard: {
-    padding: 14,
+    padding: 16,
     gap: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E6EDE7',
+    backgroundColor: '#FFFFFF',
   },
   promoHeader: {
     flexDirection: 'row',
@@ -465,14 +576,16 @@ const styles = StyleSheet.create({
   },
   promoTypeText: {
     fontSize: 10,
-    color: '#15803D',
+    color: colors.primary.dark,
     fontWeight: '700',
+    fontFamily: 'Poppins, sans-serif',
     textTransform: 'uppercase',
   },
   promoName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   promoDetailsRow: {
     flexDirection: 'row',
@@ -484,21 +597,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#EAF4EE',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderColor: '#C3DBC7',
   },
   discountText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#15803D',
+    fontWeight: '700',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.primary.dark,
   },
   minPurchaseText: {
     fontSize: 11,
-    color: '#64748B',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[600],
   },
   quotaSection: {
     gap: 4,
@@ -508,24 +623,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   quotaLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
+    fontSize: 10.5,
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[500],
   },
   quotaValue: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   progressBarBg: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F0F5F1',
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
     borderRadius: 3,
-    backgroundColor: '#32CD32',
+    backgroundColor: colors.primary.DEFAULT,
   },
   dateFooter: {
     flexDirection: 'row',
@@ -533,25 +650,26 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#F0F5F1',
   },
   dateText: {
-    fontSize: 10,
-    color: '#94A3B8',
+    fontSize: 10.5,
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[500],
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(27, 38, 29, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalBox: {
     width: '100%',
-    maxWidth: 380,
+    maxWidth: 400,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 22,
     gap: 12,
   },
   modalHeader: {
@@ -562,29 +680,22 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   formGroup: {
-    gap: 5,
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 12,
   },
   formRow: {
     flexDirection: 'row',
     gap: 10,
   },
   formLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  formInput: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    fontSize: 13,
-    color: '#0F172A',
+    fontSize: 12.5,
+    fontWeight: '600',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[800],
   },
   typeChipsRow: {
     flexDirection: 'row',
@@ -593,29 +704,29 @@ const styles = StyleSheet.create({
   typeChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E6EDE7',
   },
   typeChipActive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#32CD32',
+    backgroundColor: '#EAF4EE',
+    borderColor: colors.primary.DEFAULT,
   },
   typeChipText: {
     fontSize: 11,
-    color: '#64748B',
-    fontWeight: '600',
+    color: colors.neutral[600],
+    fontFamily: 'Poppins, sans-serif',
+    fontWeight: '500',
   },
   typeChipTextActive: {
-    color: '#15803D',
+    color: colors.primary.dark,
     fontWeight: '700',
   },
-
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 10,
-    marginTop: 10,
+    marginTop: 14,
   },
 });

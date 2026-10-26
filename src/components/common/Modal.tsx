@@ -10,6 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import { X } from 'lucide-react-native';
+import { useTheme } from '@/theme/ThemeContext';
+import { typography } from '@/theme/typography';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -27,6 +29,8 @@ export const Modal: React.FC<ModalProps> = ({
   description,
   children,
 }) => {
+  const { colors, isDark } = useTheme();
+
   return (
     <RNModal
       visible={isOpen}
@@ -36,7 +40,14 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.backdrop}
+        style={[
+          styles.backdrop,
+          {
+            backgroundColor: isDark
+              ? 'rgba(0, 0, 0, 0.75)'
+              : 'rgba(27, 38, 29, 0.55)',
+          },
+        ]}
       >
         <TouchableOpacity
           activeOpacity={1}
@@ -44,19 +55,49 @@ export const Modal: React.FC<ModalProps> = ({
           style={styles.touchableBackground}
         />
 
-        <View style={styles.dialog}>
+        <View
+          style={[
+            styles.dialog,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
           {/* Header */}
-          <View style={styles.header}>
+          <View
+            style={[
+              styles.header,
+              { borderBottomColor: colors.borderSubtle },
+            ]}
+          >
             <View style={styles.headerText}>
-              {title ? <Text style={styles.title}>{title}</Text> : null}
-              {description ? <Text style={styles.description}>{description}</Text> : null}
+              {title ? (
+                <Text style={[styles.title, { color: colors.text }]}>
+                  {title}
+                </Text>
+              ) : null}
+              {description ? (
+                <Text
+                  style={[styles.description, { color: colors.textSecondary }]}
+                >
+                  {description}
+                </Text>
+              ) : null}
             </View>
             <TouchableOpacity
               onPress={onClose}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={styles.closeButton}
+              style={[
+                styles.closeButton,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.12)'
+                    : '#F0F5F1',
+                },
+              ]}
             >
-              <X size={20} color="#818981" />
+              <X size={18} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -65,6 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
             style={styles.body}
             contentContainerStyle={styles.bodyContent}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             {children}
           </ScrollView>
@@ -77,7 +119,6 @@ export const Modal: React.FC<ModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -93,14 +134,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 480,
     maxHeight: '85%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
     elevation: 8,
+    borderWidth: 1.5,
   },
   header: {
     flexDirection: 'row',
@@ -108,7 +149,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F3EC',
   },
   headerText: {
     flex: 1,
@@ -118,21 +158,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#213329',
+    fontFamily: typography.fontFamily.bold,
   },
   description: {
     fontSize: 12,
-    color: '#818981',
-    lineHeight: 16,
+    fontFamily: typography.fontFamily.regular,
+    lineHeight: 18,
   },
   closeButton: {
     padding: 6,
     borderRadius: 9999,
-    backgroundColor: '#F1F5F9',
   },
-
   body: {
-    maxHeight: 500,
+    maxHeight: 520,
   },
   bodyContent: {
     padding: 18,

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
   TouchableOpacity,
-  Image,
-  Alert,
-  Platform,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,10 +16,10 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useProductStore } from '@/store/useProductStore';
 import { useOrderStore } from '@/store/useOrderStore';
 import { useFinanceStore } from '@/store/useFinanceStore';
-import { Card } from '@/components/common/Card';
-import { Badge } from '@/components/common/Badge';
-import { Button } from '@/components/common/Button';
 import { formatRupiah } from '@/constants';
+import { resolveProductImage } from '@/utils/productImage';
+import { typography } from '@/theme/typography';
+import { useTheme } from '@/theme/ThemeContext';
 import {
   TrendingUp,
   Package,
@@ -38,8 +38,12 @@ import {
   PlusCircle,
   Clock,
   ArrowUpRight,
+  Bell,
+  Store,
+  MapPin,
+  Sun,
+  Moon,
 } from 'lucide-react-native';
-
 
 export function DashboardScreen() {
   const navigation = useSellerNavigation();
@@ -47,6 +51,7 @@ export function DashboardScreen() {
   const { products, fetchProducts } = useProductStore();
   const { orders, fetchOrders } = useOrderStore();
   const { summary: financeSummary, fetchFinance } = useFinanceStore();
+  const { colors: themeColors, isDark, toggleTheme } = useTheme();
 
   const [showRecommendation, setShowRecommendation] = useState(true);
 
@@ -62,491 +67,1258 @@ export function DashboardScreen() {
   const pendingOrdersCount = orders.filter((o) => o.status === 'Menunggu Pembayaran').length;
 
   const quickMenus = [
-    { name: 'Tambah Produk', screen: 'Products' as const, icon: PlusCircle, color: '#32CD32', bgColor: '#F0FDF4' },
-    { name: 'Semua Produk', screen: 'Products' as const, icon: Package, color: '#F59E0B', bgColor: '#FFFBEB' },
-    { name: 'Pesanan Masuk', screen: 'Orders' as const, icon: ShoppingCart, color: '#10B981', bgColor: '#ECFDF5', count: processingOrdersCount ? String(processingOrdersCount) : undefined },
-    { name: 'Kelola Stok', screen: 'Inventory' as const, icon: Boxes, color: '#64748B', bgColor: '#F1F5F9', count: lowStockCount ? String(lowStockCount) : undefined },
-    { name: 'Dompet Toko', screen: 'Finance' as const, icon: Wallet, color: '#3B82F6', bgColor: '#EFF6FF' },
-    { name: 'Voucher Promo', screen: 'Promotions' as const, icon: Tags, color: '#8B5CF6', bgColor: '#F5F3FF' },
-    { name: 'Analitik Bisnis', screen: 'Analytics' as const, icon: BarChart3, color: '#EC4899', bgColor: '#FDF2F8' },
+    {
+      name: 'Tambah Produk',
+      screen: 'Products' as const,
+      icon: PlusCircle,
+      iconColor: isDark ? '#D1F5E8' : '#2D6A4F',
+      tileBg: isDark ? 'rgba(64, 145, 108, 0.35)' : '#EAF5EE',
+      tileBorder: isDark ? 'rgba(209, 245, 232, 0.35)' : '#C6E2D0',
+    },
+    {
+      name: 'Semua Produk',
+      screen: 'Products' as const,
+      icon: Package,
+      iconColor: isDark ? '#ECF39E' : '#40916C',
+      tileBg: isDark ? 'rgba(144, 169, 85, 0.32)' : '#F2F7ED',
+      tileBorder: isDark ? 'rgba(236, 243, 158, 0.35)' : '#D6E6CC',
+    },
+    {
+      name: 'Pesanan Masuk',
+      screen: 'Orders' as const,
+      icon: ShoppingCart,
+      iconColor: isDark ? '#7DD3FC' : '#0284C7',
+      tileBg: isDark ? 'rgba(56, 189, 248, 0.28)' : '#EBF5FF',
+      tileBorder: isDark ? 'rgba(56, 189, 248, 0.38)' : '#BEE0FF',
+      count: processingOrdersCount ? String(processingOrdersCount) : undefined,
+    },
+    {
+      name: 'Kelola Stok',
+      screen: 'Inventory' as const,
+      icon: Boxes,
+      iconColor: isDark ? '#FCD34D' : '#D97706',
+      tileBg: isDark ? 'rgba(245, 158, 11, 0.28)' : '#FFFBEB',
+      tileBorder: isDark ? 'rgba(245, 158, 11, 0.38)' : '#FDE68A',
+      count: lowStockCount ? String(lowStockCount) : undefined,
+    },
+    {
+      name: 'Dompet Toko',
+      screen: 'Finance' as const,
+      icon: Wallet,
+      iconColor: isDark ? '#6EE7B7' : '#059669',
+      tileBg: isDark ? 'rgba(16, 185, 129, 0.28)' : '#E6F7F0',
+      tileBorder: isDark ? 'rgba(16, 185, 129, 0.38)' : '#B6ECD7',
+    },
+    {
+      name: 'Voucher Promo',
+      screen: 'Promotions' as const,
+      icon: Tags,
+      iconColor: isDark ? '#FDA4AF' : '#E11D48',
+      tileBg: isDark ? 'rgba(244, 63, 94, 0.28)' : '#FFF1F2',
+      tileBorder: isDark ? 'rgba(244, 63, 94, 0.38)' : '#FECDD3',
+    },
+    {
+      name: 'Analitik Bisnis',
+      screen: 'Analytics' as const,
+      icon: BarChart3,
+      iconColor: isDark ? '#D8B4FE' : '#7C3AED',
+      tileBg: isDark ? 'rgba(168, 85, 247, 0.28)' : '#F5F3FF',
+      tileBorder: isDark ? 'rgba(168, 85, 247, 0.38)' : '#DDD6FE',
+    },
+    {
+      name: 'Profil Toko',
+      screen: 'Profile' as const,
+      icon: Store,
+      iconColor: isDark ? '#BEF264' : '#65A30D',
+      tileBg: isDark ? 'rgba(132, 204, 22, 0.28)' : '#F7FEE7',
+      tileBorder: isDark ? 'rgba(190, 242, 100, 0.38)' : '#D9F99D',
+    },
   ];
 
+  const handleNotificationPress = () => {
+    Alert.alert(
+      'Notifikasi Toko',
+      'Semua sistem pemrosesan pesanan dan notifikasi WhatsApp pembeli aktif normal.'
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      {/* 1. Subtle Botanical Canvas Gradient */}
+      <LinearGradient
+        colors={themeColors.gradients.main}
+        locations={[0, 0.22, 0.55, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* 2. Soft Ambient Mint Orbs (Light & Airy depth) */}
+      <View
+        style={[
+          styles.decorativeOrbTopRight,
+          {
+            borderColor: isDark ? 'rgba(209, 245, 232, 0.15)' : 'rgba(64, 145, 108, 0.06)',
+          },
+        ]}
+        pointerEvents="none"
       >
-        {/* 1. Header Profile Banner with Subtle Green-White Gradient */}
         <LinearGradient
-          colors={['#F0FDF4', '#FFFFFF']}
-          start={{ x: 0, y: 0 }}
+          colors={
+            isDark
+              ? ['rgba(209, 245, 232, 0.22)', 'rgba(64, 145, 108, 0.05)', 'transparent']
+              : ['rgba(209, 245, 232, 0.45)', 'rgba(255, 255, 255, 0.2)', 'transparent']
+          }
+          start={{ x: 0.2, y: 0.2 }}
           end={{ x: 1, y: 1 }}
-          style={styles.profileBanner}
+          style={styles.orbFill}
+        />
+      </View>
+
+      <View style={styles.decorativeOrbMiddleLeft} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(236, 243, 158, 0.18)', 'rgba(144, 169, 85, 0.05)', 'transparent']
+              : ['rgba(236, 243, 158, 0.25)', 'rgba(209, 245, 232, 0.1)', 'transparent']
+          }
+          start={{ x: 0.3, y: 0.3 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.orbFill}
+        />
+      </View>
+
+      <View style={styles.decorativeOrbBottomRight} pointerEvents="none">
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(64, 145, 108, 0.22)', 'rgba(11, 46, 32, 0.08)', 'transparent']
+              : ['rgba(209, 245, 232, 0.3)', 'rgba(255, 255, 255, 0.15)', 'transparent']
+          }
+          start={{ x: 0.2, y: 0.2 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.orbFill}
+        />
+      </View>
+
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Profile')}
-            style={styles.avatarTouchable}
-            activeOpacity={0.8}
+          {/* 1. Hero Section: Soft Mint / White Glass Profile Card */}
+          <View
+            style={[
+              styles.profileHeroCard,
+              {
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.25)' : '#E0ECE3',
+                backgroundColor: isDark ? 'transparent' : '#FFFFFF',
+              },
+            ]}
           >
-            <Image
-              source={{
-                uri:
-                  user?.avatar ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-              }}
-              style={styles.avatar}
+            <LinearGradient
+              colors={themeColors.gradients.header}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
             />
-            <View style={styles.onlineBadge} />
-          </TouchableOpacity>
+            {/* Top Glossy Sheen Line */}
+            <View
+              style={[
+                styles.cardTopSheen,
+                { backgroundColor: themeColors.cardSheen },
+              ]}
+            />
 
-          <View style={styles.profileText}>
-            <View style={styles.storeTitleRow}>
-              <Text style={styles.storeName} numberOfLines={1}>
-                {user?.storeName || 'Toko Tani Makmur Fahda'}
-              </Text>
-              <Badge variant="success" dot size="sm">
-                {user?.status || 'Seller Terverifikasi'}
-              </Badge>
-            </View>
-
-            <Text style={styles.ownerSubtitle}>
-              Pemilik: {user?.name || 'Fahda Febriya'} · {user?.storeAddress?.split(',')[0] || 'Indramayu'}
-            </Text>
-
-            <View style={styles.storeStatsRow}>
-              <Text style={styles.ratingText}>⭐ 4.95 (1.2k ulasan)</Text>
-              <Text style={styles.dotDivider}>•</Text>
-              <Text style={styles.joinedText}>Bergabung 2025</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Profile')}
-            style={styles.profileActionBtn}
-            activeOpacity={0.7}
-          >
-            <ChevronRight size={18} color="#15803D" />
-          </TouchableOpacity>
-        </LinearGradient>
-
-        {/* 2. Order Fulfillment Pipeline (Shopee Seller Center Style) */}
-        <Card style={styles.cardSection}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.headerTitleLeft}>
-              <View style={styles.headerGreenDot} />
-              <Text style={styles.sectionTitle}>STATUS PESANAN SAYA</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Orders')}
-              style={styles.linkRow}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.linkText}>Lihat Semua</Text>
-              <ChevronRight size={14} color="#32CD32" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.pipelineGrid}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Orders')}
-              style={styles.pipelineCol}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.pipelineIconBox, { backgroundColor: '#F0FDF4' }]}>
-                <Truck size={20} color="#15803D" />
-                {processingOrdersCount > 0 && (
-                  <View style={styles.badgeIndicator}>
-                    <Text style={styles.badgeIndicatorText}>{processingOrdersCount}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.pipelineCount}>{processingOrdersCount}</Text>
-              <Text style={styles.pipelineLabel}>Perlu Dikirim</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Orders')}
-              style={styles.pipelineCol}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.pipelineIconBox, { backgroundColor: '#FFFBEB' }]}>
-                <Clock size={20} color="#D97706" />
-                {pendingOrdersCount > 0 && (
-                  <View style={[styles.badgeIndicator, { backgroundColor: '#F59E0B' }]}>
-                    <Text style={styles.badgeIndicatorText}>{pendingOrdersCount}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.pipelineCount}>{pendingOrdersCount}</Text>
-              <Text style={styles.pipelineLabel}>Menunggu Bayar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => Alert.alert('Informasi', 'Belum ada permintaan pembatalan pembeli.')}
-              style={styles.pipelineCol}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.pipelineIconBox, { backgroundColor: '#FEF2F2' }]}>
-                <RotateCcw size={20} color="#EF4444" />
-              </View>
-              <Text style={styles.pipelineCount}>0</Text>
-              <Text style={styles.pipelineLabel}>Pengembalian</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => Alert.alert('Ulasan Mitra Tani', 'Toko Anda memiliki 1.280 ulasan dengan kepuasan 99.4%!')}
-              style={styles.pipelineCol}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.pipelineIconBox, { backgroundColor: '#EFF6FF' }]}>
-                <MessageSquare size={20} color="#3B82F6" />
-              </View>
-              <Text style={[styles.pipelineCount, { color: '#3B82F6' }]}>12</Text>
-              <Text style={styles.pipelineLabel}>Ulasan Baru</Text>
-            </TouchableOpacity>
-          </View>
-        </Card>
-
-        {/* 3. Sales & Balance Performance Cards */}
-        <View style={styles.kpiContainer}>
-          {/* Card 1: Saldo Penghasilan dengan Gradasi */}
-          <LinearGradient
-            colors={['#32CD32', '#22C55E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.balanceCard}
-          >
-            <View style={styles.balanceTop}>
-              <View style={styles.balanceIconWrapper}>
-                <Wallet size={18} color="#15803D" />
-              </View>
-              <Text style={styles.balanceLabel}>SALDO SIAP DITARIK</Text>
-              <ArrowUpRight size={16} color="#FFFFFF" style={styles.arrowTopRight} />
-            </View>
-
-            <Text style={styles.balanceValue}>
-              {formatRupiah(financeSummary?.availableBalance || 12850000)}
-            </Text>
-
-            <View style={styles.balanceBottom}>
-              <Text style={styles.balanceSub}>Rekening: BRI **** 53-2</Text>
+            <View style={styles.profileHeroTop}>
               <TouchableOpacity
-                onPress={() => navigation.navigate('Finance')}
-                style={styles.withdrawButton}
+                onPress={() => navigation.navigate('Profile')}
+                style={styles.avatarTouchable}
                 activeOpacity={0.8}
+                accessibilityLabel="Buka Profil Toko"
               >
-                <Text style={styles.withdrawBtnText}>Tarik Dana</Text>
+                <Image
+                  source={{
+                    uri:
+                      user?.avatar ||
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+                  }}
+                  style={[
+                    styles.avatar,
+                    {
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.75)' : '#FFFFFF',
+                    },
+                  ]}
+                />
+                <View style={styles.onlineBadge} />
+              </TouchableOpacity>
+
+              <View style={styles.profileTextCol}>
+                <View style={styles.greetingRow}>
+                  <Text
+                    style={[
+                      styles.ownerGreeting,
+                      { color: themeColors.text },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    Halo, {user?.name || 'Fahda Febriya'} 👋
+                  </Text>
+                  <View
+                    style={[
+                      styles.verifiedPill,
+                      {
+                        backgroundColor: isDark ? '#ECF39E' : '#EAF5EE',
+                        borderColor: isDark ? 'transparent' : '#C6E2D0',
+                      },
+                    ]}
+                  >
+                    <Sparkles size={10} color={isDark ? '#0B2E20' : '#2D6A4F'} />
+                    <Text
+                      style={[
+                        styles.verifiedPillText,
+                        { color: isDark ? '#0B2E20' : '#2D6A4F' },
+                      ]}
+                    >
+                      TERVERIFIKASI
+                    </Text>
+                  </View>
+                </View>
+
+                <Text
+                  style={[
+                    styles.storeNameText,
+                    { color: isDark ? '#D1F5E8' : '#2D6A4F' },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {user?.storeName || 'Toko Tani Makmur Fahda'}
+                </Text>
+
+                <View style={styles.metaRow}>
+                  <View style={styles.locationPill}>
+                    <MapPin size={11} color={isDark ? '#D1F5E8' : '#40916C'} />
+                    <Text
+                      style={[
+                        styles.locationText,
+                        { color: themeColors.textSecondary },
+                      ]}
+                    >
+                      {user?.storeAddress?.split(',')[0] || 'Indramayu, Jawa Barat'}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[styles.dotDivider, { color: themeColors.textMuted }]}
+                  >
+                    •
+                  </Text>
+                  <Text style={styles.ratingText}>⭐ 4.95 (1.2k ulasan)</Text>
+                </View>
+              </View>
+
+              {/* Action Buttons Row: Quick Theme Toggle & Notification Bell */}
+              <View style={styles.headerActionRow}>
+                <TouchableOpacity
+                  onPress={toggleTheme}
+                  style={[
+                    styles.actionCircleBtn,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(255, 255, 255, 0.12)'
+                        : '#F0F7F3',
+                      borderColor: isDark
+                        ? 'rgba(255, 255, 255, 0.22)'
+                        : '#E0ECE3',
+                    },
+                  ]}
+                  activeOpacity={0.75}
+                  accessibilityLabel="Ganti Mode Tampilan (Terang / Gelap)"
+                >
+                  {isDark ? (
+                    <Sun size={17} color="#D1F5E8" />
+                  ) : (
+                    <Moon size={17} color="#2D6A4F" />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleNotificationPress}
+                  style={[
+                    styles.actionCircleBtn,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(255, 255, 255, 0.12)'
+                        : '#F0F7F3',
+                      borderColor: isDark
+                        ? 'rgba(255, 255, 255, 0.22)'
+                        : '#E0ECE3',
+                    },
+                  ]}
+                  activeOpacity={0.75}
+                  accessibilityLabel="Notifikasi toko"
+                >
+                  <Bell size={17} color={isDark ? '#D1F5E8' : '#2D6A4F'} />
+                  <View style={styles.bellDot} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* 2. Status Pesanan Saya: Crisp White Card with Soft Pastel Icon Boxes */}
+          <View
+            style={[
+              styles.whiteCard,
+              {
+                backgroundColor: themeColors.card,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.cardTopSheen,
+                { backgroundColor: themeColors.cardSheen },
+              ]}
+            />
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.headerTitleLeft}>
+                <View style={styles.headerGreenDot} />
+                <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+                  STATUS PESANAN SAYA
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Orders')}
+                style={styles.linkRow}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: isDark ? '#D1F5E8' : '#2D6A4F' },
+                  ]}
+                >
+                  Lihat Semua
+                </Text>
+                <ChevronRight
+                  size={14}
+                  color={isDark ? '#D1F5E8' : '#2D6A4F'}
+                />
               </TouchableOpacity>
             </View>
-          </LinearGradient>
 
-          {/* Card 2 & 3 Grid KPI */}
-          <View style={styles.kpiRow}>
-            <Card style={styles.kpiCardHalf}>
-              <View style={styles.kpiHeaderRow}>
-                <Text style={styles.kpiMiniTitle}>Penjualan Bulan Ini</Text>
-                <View style={[styles.kpiMiniIcon, { backgroundColor: '#F0FDF4' }]}>
-                  <TrendingUp size={16} color="#15803D" />
+            <View style={styles.pipelineGrid}>
+              {/* Item 1: Perlu Dikirim (Soft Mint Box) */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Orders')}
+                style={styles.pipelineCol}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.pipelineIconBox,
+                    isDark ? styles.pipelineIconMintDark : styles.pipelineIconMintLight,
+                  ]}
+                >
+                  <Truck size={20} color={isDark ? '#D1F5E8' : '#2D6A4F'} />
+                  {processingOrdersCount > 0 && (
+                    <View style={styles.badgeIndicator}>
+                      <Text style={styles.badgeIndicatorText}>{processingOrdersCount}</Text>
+                    </View>
+                  )}
                 </View>
-              </View>
-              <Text style={styles.kpiMainNumber}>Rp 34,5 Jt</Text>
-              <View style={styles.trendRow}>
-                <Text style={styles.trendGreen}>↑ +18.4%</Text>
-                <Text style={styles.trendSub}>vs bln lalu</Text>
-              </View>
-            </Card>
+                <Text
+                  style={[
+                    styles.pipelineCount,
+                    { color: themeColors.text },
+                  ]}
+                >
+                  {processingOrdersCount}
+                </Text>
+                <Text
+                  style={[
+                    styles.pipelineLabel,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Perlu Dikirim
+                </Text>
+              </TouchableOpacity>
 
-            <Card style={styles.kpiCardHalf}>
-              <View style={styles.kpiHeaderRow}>
-                <Text style={styles.kpiMiniTitle}>Produk Aktif</Text>
-                <View style={[styles.kpiMiniIcon, { backgroundColor: '#FFFBEB' }]}>
-                  <Package size={16} color="#D97706" />
+              {/* Item 2: Menunggu Bayar (Soft Amber Box) */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Orders')}
+                style={styles.pipelineCol}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.pipelineIconBox,
+                    isDark ? styles.pipelineIconAmberDark : styles.pipelineIconAmberLight,
+                  ]}
+                >
+                  <Clock size={20} color={isDark ? '#FCD34D' : '#D97706'} />
+                  {pendingOrdersCount > 0 && (
+                    <View style={[styles.badgeIndicator, { backgroundColor: '#F59E0B' }]}>
+                      <Text style={styles.badgeIndicatorText}>{pendingOrdersCount}</Text>
+                    </View>
+                  )}
                 </View>
-              </View>
-              <Text style={styles.kpiMainNumber}>{activeProductsCount}</Text>
-              <View style={styles.trendRow}>
-                <Text style={styles.trendNeutral}>4 Kategori Tani</Text>
-              </View>
-            </Card>
-          </View>
-        </View>
+                <Text
+                  style={[
+                    styles.pipelineCount,
+                    { color: themeColors.text },
+                  ]}
+                >
+                  {pendingOrdersCount}
+                </Text>
+                <Text
+                  style={[
+                    styles.pipelineLabel,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Menunggu Bayar
+                </Text>
+              </TouchableOpacity>
 
-        {/* 4. Quick Action Marketplace Grid */}
-        <Card style={styles.cardSection}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.headerTitleLeft}>
-              <View style={styles.headerGreenDot} />
-              <Text style={styles.sectionTitle}>MENU PENGELOLAAN TOKO</Text>
+              {/* Item 3: Pengembalian (Soft Rose Box) */}
+              <TouchableOpacity
+                onPress={() => Alert.alert('Informasi Retur', 'Belum ada permintaan pengembalian produk.')}
+                style={styles.pipelineCol}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.pipelineIconBox,
+                    isDark ? styles.pipelineIconRoseDark : styles.pipelineIconRoseLight,
+                  ]}
+                >
+                  <RotateCcw size={20} color={isDark ? '#FCA5A5' : '#EF4444'} />
+                </View>
+                <Text
+                  style={[
+                    styles.pipelineCount,
+                    { color: themeColors.text },
+                  ]}
+                >
+                  0
+                </Text>
+                <Text
+                  style={[
+                    styles.pipelineLabel,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Pengembalian
+                </Text>
+              </TouchableOpacity>
+
+              {/* Item 4: Ulasan Baru (Soft Sky Blue Box) */}
+              <TouchableOpacity
+                onPress={() =>
+                  Alert.alert('Ulasan Mitra Tani', 'Toko Anda memiliki 1.280 ulasan dengan kepuasan 99.4%!')
+                }
+                style={styles.pipelineCol}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.pipelineIconBox,
+                    isDark ? styles.pipelineIconBlueDark : styles.pipelineIconBlueLight,
+                  ]}
+                >
+                  <MessageSquare size={20} color={isDark ? '#93C5FD' : '#2563EB'} />
+                </View>
+                <Text style={[styles.pipelineCount, { color: isDark ? '#93C5FD' : '#2563EB' }]}>
+                  12
+                </Text>
+                <Text
+                  style={[
+                    styles.pipelineLabel,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Ulasan Baru
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          <View style={styles.quickMenuGrid}>
-            {quickMenus.map((item) => {
-              const Icon = item.icon;
-              return (
+          {/* 3. Saldo Toko: Premium Green Gradient Centerpiece Hero Card */}
+          <View style={styles.balanceCardWrapper}>
+            <LinearGradient
+              colors={themeColors.gradients.balance}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.balanceCardGradient}
+            >
+              <View style={styles.balanceTopGloss} />
+
+              <View style={styles.balanceTop}>
+                <View style={styles.balanceIconWrapper}>
+                  <Wallet size={16} color="#ECF39E" />
+                </View>
+                <Text style={styles.balanceLabel}>SALDO SIAP DITARIK</Text>
+                <ArrowUpRight size={16} color="#ECF39E" style={styles.arrowTopRight} />
+              </View>
+
+              <Text style={styles.balanceValue}>
+                {formatRupiah(financeSummary?.availableBalance || 12850000)}
+              </Text>
+
+              <View style={styles.balanceBottom}>
+                <Text style={styles.balanceSub}>Rekening: BRI **** 53-2</Text>
                 <TouchableOpacity
-                  key={item.name}
-                  onPress={() => navigation.navigate(item.screen)}
-                  style={styles.quickMenuItem}
-                  activeOpacity={0.7}
+                  onPress={() => navigation.navigate('Finance')}
+                  style={styles.withdrawButton}
+                  activeOpacity={0.8}
                 >
-                  <View style={[styles.quickMenuIcon, { backgroundColor: item.bgColor }]}>
-                    <Icon size={22} color={item.color} />
-                    {item.count ? (
-                      <View style={styles.quickMenuBadge}>
-                        <Text style={styles.quickMenuBadgeText}>{item.count}</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text style={styles.quickMenuLabel} numberOfLines={2}>
-                    {item.name}
-                  </Text>
+                  <Text style={styles.withdrawBtnText}>Tarik Dana</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Card>
-
-        {/* 5. Rekomendasi Bisnis Musim Tanam Banner */}
-        {showRecommendation ? (
-          <LinearGradient
-            colors={['#F0FDF4', '#DCFCE7']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.recommendationBanner}
-          >
-            <TouchableOpacity
-              onPress={() => setShowRecommendation(false)}
-              style={styles.recommendationClose}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <X size={16} color="#64748B" />
-            </TouchableOpacity>
-
-            <View style={styles.recommendationHeader}>
-              <View style={styles.recommendationBadge}>
-                <Sparkles size={14} color="#FFFFFF" />
               </View>
-              <Text style={styles.recommendationBadgeText}>Tips Musim Tanam Indramayu</Text>
-            </View>
-
-            <Text style={styles.recommendationTitle}>
-              Tingkatkan Penjualan Pupuk NPK & Benih Padi Unggul
-            </Text>
-            <Text style={styles.recommendationDesc}>
-              Musim tanam rendeng di wilayah pesisir Jawa Barat telah dimulai. Aktifkan voucher diskon ongkir untuk menarik kelompok tani.
-            </Text>
-
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={() => navigation.navigate('Promotions')}
-              style={styles.recommendationButton}
-            >
-              Buat Voucher Diskon Sekarang
-            </Button>
-          </LinearGradient>
-        ) : null}
-
-        {/* 6. Peringatan Stok Menipis */}
-        <Card style={styles.cardSection}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.headerWithIcon}>
-              <AlertTriangle size={18} color="#D97706" />
-              <Text style={styles.sectionTitle}>PERINGATAN STOK MENIPIS</Text>
-            </View>
-            <Badge variant="warning" size="sm">
-              {lowStockCount} Produk
-            </Badge>
+            </LinearGradient>
           </View>
 
-          {products
-            .filter((p) => p.stock <= p.minStockAlert)
-            .slice(0, 3)
-            .map((item) => (
-              <View key={item.id} style={styles.stockItemRow}>
-                <Image source={{ uri: item.image }} style={styles.stockItemImg} />
-                <View style={styles.stockItemText}>
-                  <Text style={styles.stockItemName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={styles.stockItemSub}>
-                    {item.category} · Sisa:{' '}
-                    <Text style={styles.stockAlertText}>
-                      {item.stock} {item.unit}
-                    </Text>
+          {/* 4. Statistik: 2-Column Pure White KPI Cards */}
+          <View style={styles.kpiRow}>
+            {/* Penjualan Bulan Ini */}
+            <View
+              style={[
+                styles.kpiCardHalf,
+                {
+                  backgroundColor: themeColors.card,
+                  borderColor: themeColors.cardBorder,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.cardTopSheen,
+                  { backgroundColor: themeColors.cardSheen },
+                ]}
+              />
+              <View style={styles.kpiHeaderRow}>
+                <Text
+                  style={[
+                    styles.kpiMiniTitle,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Penjualan Bulan Ini
+                </Text>
+                <View
+                  style={[
+                    styles.kpiMiniIcon,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(64, 145, 108, 0.35)'
+                        : '#EAF5EE',
+                      borderColor: isDark
+                        ? 'rgba(209, 245, 232, 0.35)'
+                        : '#C6E2D0',
+                    },
+                  ]}
+                >
+                  <TrendingUp
+                    size={15}
+                    color={isDark ? '#D1F5E8' : '#2D6A4F'}
+                  />
+                </View>
+              </View>
+              <Text
+                style={[
+                  styles.kpiMainNumber,
+                  { color: themeColors.text },
+                ]}
+              >
+                Rp 34,5 Jt
+              </Text>
+              <View style={styles.trendRow}>
+                <View
+                  style={[
+                    styles.trendCapsule,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(209, 245, 232, 0.18)'
+                        : '#EAF5EE',
+                      borderColor: isDark
+                        ? 'rgba(209, 245, 232, 0.3)'
+                        : '#C6E2D0',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.trendGreen,
+                      { color: isDark ? '#D1F5E8' : '#2D6A4F' },
+                    ]}
+                  >
+                    ↑ +18.4%
                   </Text>
                 </View>
-                <Button
-                  variant="softGreen"
-                  size="sm"
-                  onPress={() => navigation.navigate('Inventory')}
+                <Text
+                  style={[
+                    styles.trendSub,
+                    { color: themeColors.textMuted },
+                  ]}
                 >
-                  Restock
-                </Button>
+                  vs bln lalu
+                </Text>
+              </View>
+            </View>
+
+            {/* Produk Aktif */}
+            <View
+              style={[
+                styles.kpiCardHalf,
+                {
+                  backgroundColor: themeColors.card,
+                  borderColor: themeColors.cardBorder,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.cardTopSheen,
+                  { backgroundColor: themeColors.cardSheen },
+                ]}
+              />
+              <View style={styles.kpiHeaderRow}>
+                <Text
+                  style={[
+                    styles.kpiMiniTitle,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  Produk Aktif
+                </Text>
+                <View
+                  style={[
+                    styles.kpiMiniIcon,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(144, 169, 85, 0.35)'
+                        : '#F4F9EB',
+                      borderColor: isDark
+                        ? 'rgba(236, 243, 158, 0.35)'
+                        : '#DFECC6',
+                    },
+                  ]}
+                >
+                  <Package
+                    size={15}
+                    color={isDark ? '#ECF39E' : '#40916C'}
+                  />
+                </View>
+              </View>
+              <Text
+                style={[
+                  styles.kpiMainNumber,
+                  { color: themeColors.text },
+                ]}
+              >
+                {activeProductsCount}
+              </Text>
+              <View style={styles.trendRow}>
+                <Text
+                  style={[
+                    styles.trendNeutral,
+                    { color: themeColors.textSecondary },
+                  ]}
+                >
+                  4 Kategori Tani
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* 5. Menu Pengelolaan Toko: Pure White Panel with Soft Pastel Icon Tiles */}
+          <View
+            style={[
+              styles.whiteCard,
+              {
+                backgroundColor: themeColors.card,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.cardTopSheen,
+                { backgroundColor: themeColors.cardSheen },
+              ]}
+            />
+            <View style={styles.sectionHeaderCol}>
+              <View style={styles.headerTitleLeft}>
+                <View style={styles.headerGreenDot} />
+                <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+                  MENU PENGELOLAAN TOKO
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.sectionSubtitle,
+                  { color: themeColors.textSecondary },
+                ]}
+              >
+                Akses cepat operasional dan manajemen toko
+              </Text>
+            </View>
+
+            <View style={styles.quickMenuGrid}>
+              {quickMenus.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <TouchableOpacity
+                    key={item.name}
+                    onPress={() => navigation.navigate(item.screen)}
+                    style={styles.quickMenuItem}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={[
+                        styles.quickMenuIcon,
+                        {
+                          backgroundColor: item.tileBg,
+                          borderColor: item.tileBorder,
+                        },
+                      ]}
+                    >
+                      <Icon size={22} color={item.iconColor} />
+                      {item.count ? (
+                        <View style={styles.quickMenuBadge}>
+                          <Text style={styles.quickMenuBadgeText}>{item.count}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[
+                        styles.quickMenuLabel,
+                        { color: themeColors.text },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* 6. Tips Promosi: Predominantly White Card with Soft Mint Tint */}
+          {showRecommendation ? (
+            <View
+              style={[
+                styles.recommendationBanner,
+                {
+                  backgroundColor: isDark ? 'transparent' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(209, 245, 232, 0.35)' : '#DCEADE',
+                },
+              ]}
+            >
+              <LinearGradient
+                colors={themeColors.gradients.recommendation}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View
+                style={[
+                  styles.cardTopSheen,
+                  { backgroundColor: themeColors.cardSheen },
+                ]}
+              />
+
+              <TouchableOpacity
+                onPress={() => setShowRecommendation(false)}
+                style={[
+                  styles.recommendationClose,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255, 255, 255, 0.15)'
+                      : '#F0F4F1',
+                  },
+                ]}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel="Tutup tips promosi"
+              >
+                <X size={15} color={isDark ? '#D2E5D8' : '#5F7061'} />
+              </TouchableOpacity>
+
+              <View style={styles.recommendationHeader}>
+                <View
+                  style={[
+                    styles.recommendationBadge,
+                    {
+                      backgroundColor: isDark ? '#ECF39E' : '#EAF5EE',
+                      borderColor: isDark ? 'transparent' : '#C6E2D0',
+                    },
+                  ]}
+                >
+                  <Sparkles size={11} color={isDark ? '#0B2E20' : '#2D6A4F'} />
+                  <Text
+                    style={[
+                      styles.recommendationBadgeText,
+                      { color: isDark ? '#0B2E20' : '#1E432E' },
+                    ]}
+                  >
+                    TIPS MUSIM TANAM INDRAMAYU
+                  </Text>
+                </View>
+              </View>
+
+              <Text
+                style={[
+                  styles.recommendationTitle,
+                  { color: isDark ? '#FFFFFF' : '#183326' },
+                ]}
+              >
+                Tingkatkan Penjualan Pupuk NPK & Bionava Organik
+              </Text>
+              <Text
+                style={[
+                  styles.recommendationDesc,
+                  { color: isDark ? '#D2E5D8' : '#5F7061' },
+                ]}
+              >
+                Musim tanam rendeng di wilayah pesisir Indramayu telah dimulai. Aktifkan voucher diskon ongkir untuk menarik kelompok tani mitra.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Promotions')}
+                style={styles.recommendationButton}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.recommendationBtnText}>Buat Voucher Diskon Sekarang</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {/* 7. Peringatan Stok Menipis: Predominantly White Card */}
+          <View
+            style={[
+              styles.whiteCard,
+              {
+                backgroundColor: themeColors.card,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.cardTopSheen,
+                { backgroundColor: themeColors.cardSheen },
+              ]}
+            />
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.headerWithIcon}>
+                <AlertTriangle size={18} color="#F59E0B" />
+                <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+                  PERINGATAN STOK MENIPIS
+                </Text>
+              </View>
+              <View style={styles.stockAlertBadge}>
+                <Text style={styles.stockAlertBadgeText}>{lowStockCount} Produk</Text>
+              </View>
+            </View>
+
+            {products
+              .filter((p) => p.stock <= p.minStockAlert)
+              .slice(0, 3)
+              .map((item, index, arr) => (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.stockItemRow,
+                    {
+                      borderBottomColor: themeColors.borderSubtle,
+                    },
+                    index === arr.length - 1 && styles.itemRowNoBorder,
+                  ]}
+                >
+                  <Image
+                    source={resolveProductImage(item.image, item.name)}
+                    style={[
+                      styles.stockItemImg,
+                      {
+                        borderColor: themeColors.borderSubtle,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F8FAF8',
+                      },
+                    ]}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.stockItemText}>
+                    <Text
+                      style={[
+                        styles.stockItemName,
+                        { color: themeColors.text },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.stockItemSub,
+                        { color: themeColors.textSecondary },
+                      ]}
+                    >
+                      {item.category} · Sisa:{' '}
+                      <Text style={styles.stockAlertText}>
+                        {item.stock} {item.unit}
+                      </Text>
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Inventory')}
+                    style={[
+                      styles.restockBtn,
+                      {
+                        backgroundColor: isDark
+                          ? 'rgba(64, 145, 108, 0.35)'
+                          : '#EAF5EE',
+                        borderColor: isDark
+                          ? 'rgba(209, 245, 232, 0.35)'
+                          : '#C6E2D0',
+                      },
+                    ]}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.restockBtnText,
+                        { color: isDark ? '#D1F5E8' : '#2D6A4F' },
+                      ]}
+                    >
+                      Restock
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+          </View>
+
+          {/* 8. Pesanan Terbaru Masuk: Predominantly White Card */}
+          <View
+            style={[
+              styles.whiteCard,
+              {
+                backgroundColor: themeColors.card,
+                borderColor: themeColors.cardBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.cardTopSheen,
+                { backgroundColor: themeColors.cardSheen },
+              ]}
+            />
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.headerTitleLeft}>
+                <View style={styles.headerGreenDot} />
+                <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+                  PESANAN TERBARU MASUK
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Orders')}
+                style={styles.linkRow}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: isDark ? '#D1F5E8' : '#2D6A4F' },
+                  ]}
+                >
+                  Lihat Semua
+                </Text>
+                <ChevronRight
+                  size={14}
+                  color={isDark ? '#D1F5E8' : '#2D6A4F'}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {orders.slice(0, 3).map((order, index, arr) => (
+              <View
+                key={order.id}
+                style={[
+                  styles.recentOrderRow,
+                  {
+                    borderBottomColor: themeColors.borderSubtle,
+                  },
+                  index === arr.length - 1 && styles.itemRowNoBorder,
+                ]}
+              >
+                <View style={styles.orderLeft}>
+                  <Text
+                    style={[
+                      styles.orderNumber,
+                      { color: themeColors.textMuted },
+                    ]}
+                  >
+                    {order.orderNumber}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.orderBuyer,
+                      { color: themeColors.text },
+                    ]}
+                  >
+                    {order.buyerName}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.orderTotal,
+                      { color: isDark ? '#ECF39E' : '#2D6A4F' },
+                    ]}
+                  >
+                    {formatRupiah(order.totalAmount)}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.orderStatusBadge,
+                    order.status === 'Selesai'
+                      ? (isDark ? styles.statusSuccessDark : styles.statusSuccessLight)
+                      : order.status === 'Diproses'
+                      ? (isDark ? styles.statusBrandDark : styles.statusBrandLight)
+                      : order.status === 'Dibatalkan'
+                      ? (isDark ? styles.statusDangerDark : styles.statusDangerLight)
+                      : (isDark ? styles.statusWarningDark : styles.statusWarningLight),
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.orderStatusText,
+                      order.status === 'Selesai'
+                        ? (isDark ? styles.statusTextSuccessDark : styles.statusTextSuccessLight)
+                        : order.status === 'Diproses'
+                        ? (isDark ? styles.statusTextBrandDark : styles.statusTextBrandLight)
+                        : order.status === 'Dibatalkan'
+                        ? (isDark ? styles.statusTextDangerDark : styles.statusTextDangerLight)
+                        : (isDark ? styles.statusTextWarningDark : styles.statusTextWarningLight),
+                    ]}
+                  >
+                    {order.status}
+                  </Text>
+                </View>
               </View>
             ))}
-        </Card>
-
-        {/* 7. Pesanan Terbaru Preview */}
-        <Card style={styles.cardSection}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={styles.headerTitleLeft}>
-              <View style={styles.headerGreenDot} />
-              <Text style={styles.sectionTitle}>PESANAN TERBARU MASUK</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Orders')}
-              style={styles.linkRow}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.linkText}>Lihat Semua</Text>
-              <ChevronRight size={14} color="#32CD32" />
-            </TouchableOpacity>
           </View>
-
-          {orders.slice(0, 3).map((order) => (
-            <View key={order.id} style={styles.recentOrderRow}>
-              <View style={styles.orderLeft}>
-                <Text style={styles.orderNumber}>{order.orderNumber}</Text>
-                <Text style={styles.orderBuyer}>{order.buyerName}</Text>
-                <Text style={styles.orderTotal}>{formatRupiah(order.totalAmount)}</Text>
-              </View>
-              <Badge
-                variant={
-                  order.status === 'Selesai'
-                    ? 'success'
-                    : order.status === 'Diproses'
-                    ? 'brand'
-                    : order.status === 'Dibatalkan'
-                    ? 'danger'
-                    : 'warning'
-                }
-                size="sm"
-              >
-                {order.status}
-              </Badge>
-            </View>
-          ))}
-        </Card>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   content: {
     padding: 16,
-    paddingBottom: Platform.OS === 'ios' ? 96 : 80,
-    gap: 14,
+    paddingBottom: Platform.OS === 'ios' ? 104 : 92,
+    gap: 15,
   },
-  profileBanner: {
+  // Ambient Soft Mint Orbs
+  decorativeOrbTopRight: {
+    position: 'absolute',
+    top: -80,
+    right: -100,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  decorativeOrbMiddleLeft: {
+    position: 'absolute',
+    top: 320,
+    left: -90,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    overflow: 'hidden',
+  },
+  decorativeOrbBottomRight: {
+    position: 'absolute',
+    bottom: 120,
+    right: -80,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    overflow: 'hidden',
+  },
+  orbFill: {
+    ...StyleSheet.absoluteFill,
+  },
+  // Universal Pure White Card
+  whiteCard: {
+    borderRadius: 22,
+    borderWidth: 1.5,
+    padding: 16,
+    overflow: 'hidden',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
+    position: 'relative',
+  },
+  cardTopSheen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1.5,
+  },
+  // 1. Profile Hero Card (Soft Mint / White Glass Card)
+  profileHeroCard: {
+    borderRadius: 22,
+    borderWidth: 1.5,
+    padding: 16,
+    overflow: 'hidden',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
+    position: 'relative',
+  },
+  profileHeroTop: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#DCFCE7',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   avatarTouchable: {
     position: 'relative',
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     borderWidth: 2,
-    borderColor: '#32CD32',
   },
   onlineBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#22C55E',
+    bottom: 1,
+    right: 1,
+    width: 13,
+    height: 13,
+    borderRadius: 6.5,
+    backgroundColor: '#32CD32',
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },
-  profileText: {
+  profileTextCol: {
     flex: 1,
-    gap: 3,
   },
-  storeTitleRow: {
+  greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 2,
   },
-  storeName: {
+  ownerGreeting: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
     letterSpacing: -0.2,
   },
-  ownerSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  storeStatsRow: {
+  verifiedPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 2,
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  ratingText: {
-    fontSize: 11,
-    color: '#D97706',
-    fontWeight: '700',
+  verifiedPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    fontFamily: typography.fontFamily.bold,
+    letterSpacing: 0.4,
+  },
+  storeNameText: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
+    marginBottom: 3,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  locationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  locationText: {
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.regular,
   },
   dotDivider: {
-    fontSize: 10,
-    color: '#CBD5E1',
-  },
-  joinedText: {
     fontSize: 11,
-    color: '#64748B',
   },
-  profileActionBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: '#F0FDF4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
+  ratingText: {
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.medium,
+    color: '#D97706',
   },
-  cardSection: {
-    padding: 16,
-    gap: 12,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  sectionHeaderRow: {
+  headerActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+  },
+  actionCircleBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  bellDot: {
+    position: 'absolute',
+    top: 7,
+    right: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.2,
+    borderColor: '#FFFFFF',
+  },
+  // Section Headers
+  sectionHeaderRow: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionHeaderCol: {
+    marginBottom: 14,
   },
   headerTitleLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+  },
+  headerWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
   },
   headerGreenDot: {
     width: 6,
@@ -554,200 +1326,265 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#32CD32',
   },
-  headerWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
   sectionTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    letterSpacing: 0.5,
+  },
+  sectionSubtitle: {
     fontSize: 11.5,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.6,
+    fontFamily: typography.fontFamily.regular,
+    marginTop: 3,
+    paddingLeft: 14,
   },
   linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 3,
   },
   linkText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#32CD32',
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
   },
+  // 2. Order Fulfillment Pipeline (Soft Pastel Icon Boxes)
   pipelineGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 6,
+    alignItems: 'center',
   },
   pipelineCol: {
     alignItems: 'center',
-    gap: 4,
     flex: 1,
   },
   pipelineIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 6,
     position: 'relative',
-    marginBottom: 2,
+    borderWidth: 1,
+  },
+  pipelineIconMintDark: {
+    backgroundColor: 'rgba(64, 145, 108, 0.35)',
+    borderColor: 'rgba(209, 245, 232, 0.35)',
+  },
+  pipelineIconMintLight: {
+    backgroundColor: '#EAF5EE',
+    borderColor: '#C6E2D0',
+  },
+  pipelineIconAmberDark: {
+    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+    borderColor: 'rgba(245, 158, 11, 0.38)',
+  },
+  pipelineIconAmberLight: {
+    backgroundColor: '#FEF9E7',
+    borderColor: '#FDE68A',
+  },
+  pipelineIconRoseDark: {
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
+    borderColor: 'rgba(239, 68, 68, 0.38)',
+  },
+  pipelineIconRoseLight: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECDD3',
+  },
+  pipelineIconBlueDark: {
+    backgroundColor: 'rgba(59, 130, 246, 0.25)',
+    borderColor: 'rgba(59, 130, 246, 0.38)',
+  },
+  pipelineIconBlueLight: {
+    backgroundColor: '#F0F7FF',
+    borderColor: '#BAE6FD',
   },
   badgeIndicator: {
     position: 'absolute',
     top: -4,
     right: -4,
     backgroundColor: '#EF4444',
-    borderRadius: 9,
+    borderRadius: 10,
     minWidth: 18,
     height: 18,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   badgeIndicatorText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
+    fontFamily: typography.fontFamily.bold,
+    color: '#FFFFFF',
   },
   pipelineCount: {
     fontSize: 16,
-    fontWeight: '900',
-    color: '#0F172A',
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    marginBottom: 2,
   },
   pipelineLabel: {
     fontSize: 11,
-    color: '#64748B',
+    fontFamily: typography.fontFamily.medium,
     textAlign: 'center',
-    fontWeight: '500',
   },
-  kpiContainer: {
-    gap: 12,
+  // 3. Saldo Centerpiece Card (Premium Green Gradient)
+  balanceCardWrapper: {
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(209, 245, 232, 0.45)',
+    overflow: 'hidden',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 6,
   },
-  balanceCard: {
+  balanceCardGradient: {
     padding: 18,
-    borderRadius: 20,
-    shadowColor: '#32CD32',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    position: 'relative',
+  },
+  balanceTopGloss: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '38%',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   balanceTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    position: 'relative',
+    gap: 7,
+    marginBottom: 8,
   },
   balanceIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   balanceLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 0.8,
+    fontSize: 11.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    color: '#D1F5E8',
+    letterSpacing: 0.7,
   },
   arrowTopRight: {
-    position: 'absolute',
-    right: 0,
-    top: 2,
+    marginLeft: 'auto',
   },
   balanceValue: {
-    fontSize: 28,
-    fontWeight: '900',
+    fontSize: 27,
+    fontWeight: '800',
+    fontFamily: typography.fontFamily.bold,
     color: '#FFFFFF',
-    marginVertical: 10,
     letterSpacing: -0.5,
+    marginBottom: 12,
   },
   balanceBottom: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
   },
   balanceSub: {
     fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.regular,
+    color: '#D2E5D8',
   },
   withdrawButton: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
+    backgroundColor: '#ECF39E',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 20,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   withdrawBtnText: {
-    color: '#15803D',
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    color: '#0B2E20',
   },
+  // 4. Statistik 2-Column KPI (Pure White Cards)
   kpiRow: {
     flexDirection: 'row',
     gap: 12,
   },
   kpiCardHalf: {
     flex: 1,
+    borderRadius: 20,
+    borderWidth: 1.5,
     padding: 14,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 6,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   kpiHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   kpiMiniTitle: {
     fontSize: 11.5,
     fontWeight: '600',
-    color: '#64748B',
+    fontFamily: typography.fontFamily.semibold,
   },
   kpiMiniIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   kpiMainNumber: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#0F172A',
+    fontSize: 19,
+    fontWeight: '800',
+    fontFamily: typography.fontFamily.bold,
+    letterSpacing: -0.3,
+    marginBottom: 6,
   },
   trendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
+  },
+  trendCapsule: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
   },
   trendGreen: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
-    color: '#16A34A',
+    fontFamily: typography.fontFamily.bold,
   },
   trendSub: {
     fontSize: 10.5,
-    color: '#94A3B8',
+    fontFamily: typography.fontFamily.regular,
   },
   trendNeutral: {
     fontSize: 11,
-    color: '#64748B',
-    fontWeight: '500',
+    fontFamily: typography.fontFamily.regular,
   },
+  // 5. Menu Pengelolaan Toko (White Panel with Soft Pastel Tiles)
   quickMenuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -755,21 +1592,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   quickMenuItem: {
-    width: '22%',
+    width: '22.5%',
     alignItems: 'center',
-    gap: 6,
   },
   quickMenuIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
+    width: 52,
+    height: 52,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 6,
     position: 'relative',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
+    borderWidth: 1.2,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
     elevation: 1,
   },
   quickMenuBadge: {
@@ -777,127 +1615,253 @@ const styles = StyleSheet.create({
     top: -4,
     right: -4,
     backgroundColor: '#EF4444',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    borderRadius: 10,
+    minWidth: 17,
+    height: 17,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   quickMenuBadgeText: {
-    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '800',
+    fontFamily: typography.fontFamily.bold,
+    color: '#FFFFFF',
   },
   quickMenuLabel: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#334155',
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.medium,
     textAlign: 'center',
     lineHeight: 14,
   },
+  // 6. Tips Musim Tanam (Predominantly White Card)
   recommendationBanner: {
-    padding: 16,
-    borderRadius: 18,
+    borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: '#BBF7D0',
+    padding: 16,
     position: 'relative',
-    gap: 6,
+    overflow: 'hidden',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   recommendationClose: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 14,
+    right: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 2,
   },
   recommendationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginBottom: 8,
   },
   recommendationBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    backgroundColor: '#32CD32',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   recommendationBadgeText: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: '800',
-    color: '#15803D',
+    fontFamily: typography.fontFamily.bold,
     letterSpacing: 0.4,
   },
   recommendationTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0F172A',
-    lineHeight: 19,
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    marginBottom: 6,
+    lineHeight: 21,
+    paddingRight: 24,
   },
   recommendationDesc: {
     fontSize: 12,
-    color: '#475569',
-    lineHeight: 17,
+    fontFamily: typography.fontFamily.regular,
+    lineHeight: 18,
+    marginBottom: 14,
   },
   recommendationButton: {
-    marginTop: 6,
-    alignSelf: 'flex-start',
+    backgroundColor: '#2D6A4F',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(209, 245, 232, 0.4)',
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recommendationBtnText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    color: '#FFFFFF',
+  },
+  // 7. Peringatan Stok Menipis (Predominantly White Card)
+  stockAlertBadge: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  stockAlertBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    color: '#B45309',
   },
   stockItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    gap: 12,
+  },
+  itemRowNoBorder: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
   },
   stockItemImg: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
   },
   stockItemText: {
     flex: 1,
-    gap: 2,
   },
   stockItemName: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
+    marginBottom: 3,
   },
   stockItemSub: {
     fontSize: 11.5,
-    color: '#64748B',
+    fontFamily: typography.fontFamily.regular,
   },
   stockAlertText: {
-    color: '#D97706',
     fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    color: '#D97706',
   },
+  restockBtn: {
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  restockBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  // 8. Pesanan Terbaru (Predominantly White Card)
   recentOrderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
   orderLeft: {
     gap: 2,
   },
   orderNumber: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 11,
+    fontFamily: typography.fontFamily.medium,
   },
   orderBuyer: {
-    fontSize: 11.5,
-    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
   },
   orderTotal: {
-    fontSize: 12,
+    fontSize: 13.5,
     fontWeight: '700',
-    color: '#16A34A',
+    fontFamily: typography.fontFamily.bold,
+  },
+  orderStatusBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  orderStatusText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  // Status badge styles: Light (Pastel) & Dark variants
+  statusSuccessLight: {
+    backgroundColor: '#EAF5EE',
+    borderColor: '#C6E2D0',
+  },
+  statusTextSuccessLight: {
+    color: '#1E432E',
+  },
+  statusSuccessDark: {
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderColor: 'rgba(16, 185, 129, 0.38)',
+  },
+  statusTextSuccessDark: {
+    color: '#10B981',
+  },
+  statusBrandLight: {
+    backgroundColor: '#E0F2FE',
+    borderColor: '#BAE6FD',
+  },
+  statusTextBrandLight: {
+    color: '#0369A1',
+  },
+  statusBrandDark: {
+    backgroundColor: 'rgba(64, 145, 108, 0.25)',
+    borderColor: 'rgba(64, 145, 108, 0.38)',
+  },
+  statusTextBrandDark: {
+    color: '#40916C',
+  },
+  statusDangerLight: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FECACA',
+  },
+  statusTextDangerLight: {
+    color: '#B91C1C',
+  },
+  statusDangerDark: {
+    backgroundColor: 'rgba(239, 68, 68, 0.22)',
+    borderColor: 'rgba(239, 68, 68, 0.38)',
+  },
+  statusTextDangerDark: {
+    color: '#EF4444',
+  },
+  statusWarningLight: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  statusTextWarningLight: {
+    color: '#B45309',
+  },
+  statusWarningDark: {
+    backgroundColor: 'rgba(245, 158, 11, 0.22)',
+    borderColor: 'rgba(245, 158, 11, 0.38)',
+  },
+  statusTextWarningDark: {
+    color: '#D97706',
   },
 });

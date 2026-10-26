@@ -1,34 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   ScrollView,
   Image,
-  Alert,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useProductStore } from '@/store/useProductStore';
 import { ProductFilterTab, Product } from '@/types';
-import { Card } from '@/components/common/Card';
+import { Card } from '@/components/cards/Card';
 import { Button } from '@/components/common/Button';
+import { IconButton } from '@/components/common/IconButton';
 import { Badge } from '@/components/common/Badge';
+import { FilterChip, FilterChipGroup } from '@/components/common/FilterChip';
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
+import { ConfirmationModal } from '@/components/common/ConfirmationModal';
+import { SearchInput } from '@/components/forms/SearchInput';
+import { Input } from '@/components/forms/Input';
 import { ProductFormModal } from '@/components/products/ProductFormModal';
 import { formatRupiah, PRODUCT_CATEGORIES } from '@/constants';
+import { resolveProductImage } from '@/utils/productImage';
+import { typography } from '@/theme/typography';
+import { useTheme } from '@/theme/ThemeContext';
+import { useBottomTabSpace } from '@/navigation/hooks';
 import {
   Plus,
-  Search,
   Edit2,
   Trash2,
   Boxes,
   AlertTriangle,
+  X,
+  Package,
 } from 'lucide-react-native';
 
-const TABS: { key: ProductFilterTab; label: string }[] = [
+const STATUS_TABS: { key: ProductFilterTab; label: string }[] = [
   { key: 'all', label: 'Semua' },
   { key: 'active', label: 'Aktif' },
   { key: 'low_stock', label: 'Stok Menipis' },
@@ -37,8 +47,12 @@ const TABS: { key: ProductFilterTab; label: string }[] = [
 ];
 
 export function ProductsScreen() {
+  const { colors: themeColors, isDark } = useTheme();
+  const bottomSpace = useBottomTabSpace(24);
+
   const {
     products,
+    isLoading,
     activeTab,
     searchQuery,
     selectedCategory,
@@ -54,55 +68,175 @@ export function ProductsScreen() {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [stockModalProduct, setStockModalProduct] = useState<Product | null>(null);
   const [newStockInput, setNewStockInput] = useState('');
+  const [isStockSaving, setIsStockSaving] = useState(false);
+
+  // Delete confirmation state
+  const [deleteTargetProduct, setDeleteTargetProduct] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
+  // Status counts for filter chips
+  const activeCount = useMemo(
+    () => products.filter((p) => p.status === 'Aktif').length,
+    [products]
+  );
+  const lowStockCount = useMemo(
+    () => products.filter((p) => p.stock > 0 && p.stock <= p.minStockAlert).length,
+    [products]
+  );
+  const outOfStockCount = useMemo(
+    () => products.filter((p) => p.stock === 0).length,
+    [products]
+  );
+  const reviewCount = useMemo(
+    () => products.filter((p) => p.status === 'Sedang Diperiksa').length,
+    [products]
+  );
+
+  const getTabCount = (key: ProductFilterTab): number | undefined => {
+    switch (key) {
+      case 'all':
+        return products.length;
+      case 'active':
+        return activeCount;
+      case 'low_stock':
+        return lowStockCount;
+      case 'out_of_stock':
+        return outOfStockCount;
+      case 'review':
+        return reviewCount;
+      default:
+        return undefined;
+    }
+  };
+
   const handleStockSave = async () => {
     if (!stockModalProduct || newStockInput.trim() === '') return;
     const num = parseInt(newStockInput, 10);
-    if (isNaN(num) || num < 0) {
-      Alert.alert('Error', 'Masukkan jumlah stok yang valid.');
-      return;
+    if (isNaN(num) || num < 0) return;
+
+    setIsStockSaving(true);
+    try {
+      await updateStock(stockModalProduct.id, num);
+      setStockModalProduct(null);
+      setNewStockInput('');
+    } finally {
+      setIsStockSaving(false);
     }
-    await updateStock(stockModalProduct.id, num);
-    setStockModalProduct(null);
-    setNewStockInput('');
   };
 
-  const handleDelete = (id: string, name: string) => {
-    Alert.alert(
-      'Hapus Produk',
-      `Yakin ingin menghapus produk "${name}" dari katalog toko?`,
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Hapus',
-          style: 'destructive',
-          onPress: async () => {
-            await deleteProduct(id);
-          },
-        },
-      ]
-    );
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetProduct) return;
+    setIsDeleting(true);
+    try {
+      await deleteProduct(deleteTargetProduct.id);
+      if (detailProduct?.id === deleteTargetProduct.id) {
+        setDetailProduct(null);
+      }
+      setDeleteTargetProduct(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getStatusBadgeVariant = (status: Product['status']): 'brand' | 'warning' | 'danger' | 'neutral' => {
+    switch (status) {
+      case 'Aktif':
+        return 'brand';
+      case 'Stok Menipis':
+        return 'warning';
+      case 'Habis':
+        return 'danger';
+      case 'Sedang Diperiksa':
+      default:
+        return 'neutral';
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: isDark ? themeColors.background : '#FAF9F6' }]}
+      edges={['top']}
+    >
+      {/* 1. Subtle Botanical Canvas Gradient */}
+      <LinearGradient
+        colors={themeColors.gradients.main}
+        locations={[0, 0.22, 0.55, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* 2. Soft Ambient Mint Orb Top Right */}
+      <View
+        style={[
+          styles.decorativeOrbTopRight,
+          {
+            borderColor: isDark ? 'rgba(209, 245, 232, 0.12)' : 'rgba(64, 145, 108, 0.06)',
+          },
+        ]}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={
+            isDark
+              ? ['rgba(209, 245, 232, 0.18)', 'rgba(64, 145, 108, 0.04)', 'transparent']
+              : ['rgba(209, 245, 232, 0.40)', 'rgba(255, 255, 255, 0.15)', 'transparent']
+          }
+          start={{ x: 0.2, y: 0.2 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
+      {/* 3. Screen Header */}
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: isDark ? 'rgba(22, 58, 38, 0.85)' : '#FFFFFF',
+            borderBottomColor: isDark ? 'rgba(209, 245, 232, 0.14)' : '#DDE8E0',
+          },
+        ]}
+      >
+        {/* Hairline top sheen */}
+        <View
+          style={[
+            styles.sheenLine,
+            {
+              backgroundColor: isDark
+                ? 'rgba(255, 255, 255, 0.18)'
+                : 'rgba(255, 255, 255, 0.95)',
+            },
+          ]}
+        />
         <View style={styles.titleCol}>
-          <Text style={styles.screenTitle}>Produk Saya</Text>
-          <Text style={styles.screenSubtitle}>
-            Kelola katalog pupuk, benih, dan alat pertanian
+          <Text
+            style={[
+              styles.eyebrow,
+              { color: isDark ? themeColors.mint : themeColors.primary },
+            ]}
+          >
+            INVENTARIS & KATALOG
+          </Text>
+          <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+            Katalog Produk
+          </Text>
+          <Text style={[styles.screenSubtitle, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+            Kelola stok, harga, & varian sarana pertanian
           </Text>
         </View>
+
         <Button
           variant="primary"
           size="sm"
-          leftIcon={<Plus size={16} color="#FFFFFF" />}
+          leftIcon={<Plus size={15} color="#FFFFFF" />}
           onPress={() => {
             setEditingProduct(null);
             setIsAddModalOpen(true);
@@ -112,94 +246,104 @@ export function ProductsScreen() {
         </Button>
       </View>
 
-      {/* Search Input */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchWrapper}>
-          <Search size={18} color="#818981" />
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={(text) => {
-              setSearchQuery(text);
-              fetchProducts();
-            }}
-            placeholder="Cari nama produk, SKU, kategori..."
-            placeholderTextColor="#A0A8A0"
-          />
+      {/* 4. Search Input */}
+      <View style={styles.searchContainer}>
+        <SearchInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Cari nama produk, SKU, kategori..."
+          variant="glass"
+        />
+      </View>
+
+      {/* 5. Status Filter Tabs */}
+      <View style={styles.tabsSection}>
+        <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
+          {STATUS_TABS.map((tab) => {
+            const isSelected = activeTab === tab.key;
+            return (
+              <FilterChip
+                key={tab.key}
+                label={tab.label}
+                selected={isSelected}
+                count={getTabCount(tab.key)}
+                size="sm"
+                onPress={() => setActiveTab(tab.key)}
+              />
+            );
+          })}
+        </FilterChipGroup>
+      </View>
+
+      {/* 6. Category Filter Chips */}
+      <View style={styles.categorySection}>
+        <FilterChipGroup contentContainerStyle={styles.chipsRowPadding}>
+          {PRODUCT_CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <FilterChip
+                key={cat}
+                label={cat}
+                selected={isSelected}
+                size="sm"
+                onPress={() => setSelectedCategory(cat)}
+              />
+            );
+          })}
+        </FilterChipGroup>
+      </View>
+
+      {/* 7. Quick Summary KPI Bar */}
+      <View style={styles.summaryBar}>
+        <View
+          style={[
+            styles.summaryPill,
+            {
+              backgroundColor: isDark ? 'rgba(22, 58, 38, 0.65)' : '#FFFFFF',
+              borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+            },
+          ]}
+        >
+          <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+            Total: <Text style={[styles.summaryValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>{products.length}</Text>
+          </Text>
+          <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
+          <Text style={[styles.summaryLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+            Aktif: <Text style={[styles.summaryValue, { color: isDark ? '#D1F5E8' : '#31572C' }]}>{activeCount}</Text>
+          </Text>
+
+          {lowStockCount > 0 ? (
+            <>
+              <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
+              <Text style={[styles.summaryLabel, { color: '#D97706' }]}>
+                Menipis: <Text style={[styles.summaryValue, { color: '#D97706' }]}>{lowStockCount}</Text>
+              </Text>
+            </>
+          ) : null}
+
+          {outOfStockCount > 0 ? (
+            <>
+              <Text style={[styles.summaryDivider, { color: isDark ? 'rgba(255,255,255,0.2)' : '#DDE8E0' }]}>|</Text>
+              <Text style={[styles.summaryLabel, { color: '#EF4444' }]}>
+                Habis: <Text style={[styles.summaryValue, { color: '#EF4444' }]}>{outOfStockCount}</Text>
+              </Text>
+            </>
+          ) : null}
         </View>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={styles.tabsContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsContent}
-        >
-          {TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              style={[
-                styles.tabChip,
-                activeTab === tab.key && styles.tabChipActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.tabChipText,
-                  activeTab === tab.key && styles.tabChipTextActive,
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Category Filter Chips */}
-      <View style={styles.categoriesContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContent}
-        >
-          {PRODUCT_CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              onPress={() => {
-                setSelectedCategory(cat);
-                fetchProducts();
-              }}
-              style={[
-                styles.categoryChip,
-                selectedCategory === cat && styles.categoryChipActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  selectedCategory === cat && styles.categoryChipTextActive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Product List */}
+      {/* 8. Product Cards List */}
       <ScrollView
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomSpace }]}
         showsVerticalScrollIndicator={false}
       >
-        {products.length === 0 ? (
+        {isLoading && products.length === 0 ? (
+          <LoadingState message="Memuat katalog produk..." style={styles.loadingState} />
+        ) : products.length === 0 ? (
           <EmptyState
             variant="products"
             title="Tidak Ada Produk"
-            description="Tidak ada produk yang cocok dengan pencarian atau filter yang dipilih."
+            description="Tidak ada produk pertanian yang cocok dengan pencarian atau filter yang dipilih."
             action={{
               label: 'Tambah Produk',
               onPress: () => {
@@ -214,90 +358,158 @@ export function ProductsScreen() {
             const isOut = product.stock === 0;
 
             return (
-              <Card key={product.id} style={styles.productCard}>
+              <Card
+                key={product.id}
+                sheen
+                variant="elevated"
+                style={[
+                  styles.productCard,
+                  {
+                    backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
+                    borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#DDE8E0',
+                  },
+                ]}
+                onPress={() => setDetailProduct(product)}
+              >
                 <View style={styles.productTopRow}>
-                  <Image source={{ uri: product.image }} style={styles.productImage} />
+                  {/* Thumbnail Image */}
+                  <Image
+                    source={resolveProductImage(product.image, product.name)}
+                    style={[
+                      styles.productImage,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F8FAF8',
+                        borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+                      },
+                    ]}
+                    resizeMode="cover"
+                  />
+
+                  {/* Metadata and Price */}
                   <View style={styles.productInfo}>
                     <View style={styles.categoryAndBadge}>
-                      <Text style={styles.productCategory}>{product.category}</Text>
-                      <Badge
-                        variant={
-                          product.status === 'Aktif'
-                            ? 'success'
-                            : product.status === 'Stok Menipis'
-                            ? 'warning'
-                            : product.status === 'Habis'
-                            ? 'danger'
-                            : 'neutral'
-                        }
-                        size="sm"
+                      <Text
+                        style={[
+                          styles.productCategory,
+                          { color: isDark ? '#D1F5E8' : '#64746A' },
+                        ]}
+                        numberOfLines={1}
                       >
+                        {product.category}
+                      </Text>
+                      <Badge variant={getStatusBadgeVariant(product.status)} size="sm" dot>
                         {product.status}
                       </Badge>
                     </View>
 
-                    <Text style={styles.productName} numberOfLines={2}>
+                    <Text
+                      style={[
+                        styles.productName,
+                        { color: isDark ? '#FFFFFF' : '#183326' },
+                      ]}
+                      numberOfLines={2}
+                    >
                       {product.name}
                     </Text>
-                    <Text style={styles.skuText}>SKU: {product.sku}</Text>
-                    <Text style={styles.productPrice}>{formatRupiah(product.price)}</Text>
+
+                    <Text style={[styles.skuText, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                      SKU: {product.sku} {product.unit ? `· ${product.unit}` : ''}
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.productPrice,
+                        { color: isDark ? '#ECF39E' : themeColors.primaryDark },
+                      ]}
+                    >
+                      {formatRupiah(product.price)}
+                    </Text>
                   </View>
                 </View>
 
-                {/* Stock Alert Warning Bar */}
+                {/* Stock Warning Strip */}
                 {isLow ? (
-                  <View style={styles.warningStrip}>
-                    <AlertTriangle size={14} color="#D97706" />
+                  <View
+                    style={[
+                      styles.warningStrip,
+                      {
+                        backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : '#FEF9E7',
+                        borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#FDE68A',
+                      },
+                    ]}
+                  >
+                    <AlertTriangle size={13} color="#D97706" />
                     <Text style={styles.warningStripText}>
-                      Stok menipis! Sisa {product.stock} {product.unit} (Batas: {product.minStockAlert})
+                      Stok menipis! Sisa {product.stock} {product.unit} (Alert: {product.minStockAlert})
                     </Text>
                   </View>
                 ) : isOut ? (
-                  <View style={[styles.warningStrip, styles.dangerStrip]}>
-                    <AlertTriangle size={14} color="#D95757" />
+                  <View
+                    style={[
+                      styles.warningStrip,
+                      styles.dangerStrip,
+                      {
+                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2',
+                        borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : '#FECDD3',
+                      },
+                    ]}
+                  >
+                    <AlertTriangle size={13} color="#EF4444" />
                     <Text style={[styles.warningStripText, styles.dangerStripText]}>
                       Stok habis! Pembeli tidak dapat memesan produk ini.
                     </Text>
                   </View>
                 ) : null}
 
-                {/* Action Footer */}
-                <View style={styles.cardFooter}>
-                  <Text style={styles.stockFooterText}>
-                    Stok: <Text style={styles.stockBold}>{product.stock} {product.unit}</Text> · Terjual: {product.soldCount}
+                {/* Card Action Footer */}
+                <View
+                  style={[
+                    styles.cardFooter,
+                    { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#EFF4F0' },
+                  ]}
+                >
+                  <Text style={[styles.stockFooterText, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                    Stok:{' '}
+                    <Text style={[styles.stockBold, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                      {product.stock}
+                    </Text>{' '}
+                    · Terjual:{' '}
+                    <Text style={[styles.stockBold, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                      {product.soldCount}
+                    </Text>
                   </Text>
 
+                  {/* Grouped Management Action Buttons */}
                   <View style={styles.actionButtonsRow}>
-                    <TouchableOpacity
+                    <IconButton
+                      icon={<Boxes size={15} color={isDark ? '#D1F5E8' : '#31572C'} />}
+                      variant="softMint"
+                      size="sm"
+                      accessibilityLabel="Ubah stok"
                       onPress={() => {
                         setStockModalProduct(product);
                         setNewStockInput(String(product.stock));
                       }}
-                      style={styles.iconActionBtn}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Boxes size={16} color="#32CD32" />
+                    />
 
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
+                    <IconButton
+                      icon={<Edit2 size={15} color={isDark ? '#D1F5E8' : '#31572C'} />}
+                      variant="secondary"
+                      size="sm"
+                      accessibilityLabel="Edit produk"
                       onPress={() => {
                         setEditingProduct(product);
                         setIsAddModalOpen(true);
                       }}
-                      style={styles.iconActionBtn}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Edit2 size={16} color="#2563EB" />
-                    </TouchableOpacity>
+                    />
 
-                    <TouchableOpacity
-                      onPress={() => handleDelete(product.id, product.name)}
-                      style={styles.iconActionBtn}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Trash2 size={16} color="#D95757" />
-                    </TouchableOpacity>
+                    <IconButton
+                      icon={<Trash2 size={15} color="#EF4444" />}
+                      variant="danger"
+                      size="sm"
+                      accessibilityLabel="Hapus produk"
+                      onPress={() => setDeleteTargetProduct(product)}
+                    />
                   </View>
                 </View>
               </Card>
@@ -306,7 +518,170 @@ export function ProductsScreen() {
         )}
       </ScrollView>
 
-      {/* Add / Edit Product Modal */}
+      {/* DETAIL PRODUK MODAL */}
+      <Modal
+        visible={!!detailProduct}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDetailProduct(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View
+            style={[
+              styles.detailModalBox,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.98)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.20)' : '#DDE8E0',
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.detailModalHeader,
+                { borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#EFF4F0' },
+              ]}
+            >
+              <View style={styles.detailHeaderLeft}>
+                <Package size={18} color={themeColors.primary} />
+                <Text style={[styles.detailModalTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  Detail Produk
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setDetailProduct(null)}
+                style={[
+                  styles.closeBtn,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#F2FBF5',
+                  },
+                ]}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel="Tutup detail produk"
+              >
+                <X size={18} color={isDark ? '#D1F5E8' : '#64746A'} />
+              </TouchableOpacity>
+            </View>
+
+            {detailProduct && (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.detailContent}>
+                {/* Hero Product Image */}
+                <View
+                  style={[
+                    styles.detailHeroImageWrapper,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#FAF9F6',
+                      borderColor: isDark ? 'rgba(209, 245, 232, 0.18)' : '#DDE8E0',
+                    },
+                  ]}
+                >
+                  <Image
+                    source={resolveProductImage(detailProduct.image, detailProduct.name)}
+                    style={styles.detailHeroImage}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.detailHeroBadgeRow}>
+                    <Badge variant="brand" size="sm">
+                      {detailProduct.category}
+                    </Badge>
+                    <Badge variant={getStatusBadgeVariant(detailProduct.status)} size="sm" dot>
+                      {detailProduct.status}
+                    </Badge>
+                  </View>
+                </View>
+
+                {/* Product Title & Price */}
+                <Text style={[styles.detailProductName, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                  {detailProduct.name}
+                </Text>
+
+                <View style={styles.detailPriceRow}>
+                  <Text style={[styles.detailPrice, { color: isDark ? '#ECF39E' : themeColors.primaryDark }]}>
+                    {formatRupiah(detailProduct.price)}
+                  </Text>
+                  {detailProduct.originalPrice ? (
+                    <Text style={[styles.detailOriginalPrice, { color: isDark ? '#8BA899' : '#7E9180' }]}>
+                      {formatRupiah(detailProduct.originalPrice)}
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Spec Summary Card */}
+                <View
+                  style={[
+                    styles.detailSpecCard,
+                    {
+                      backgroundColor: isDark ? 'rgba(64, 145, 108, 0.20)' : '#F2FBF5',
+                      borderColor: isDark ? 'rgba(209, 245, 232, 0.22)' : '#DDE8E0',
+                    },
+                  ]}
+                >
+                  <View style={styles.specItem}>
+                    <Text style={[styles.specLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>SKU Toko</Text>
+                    <Text style={[styles.specValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>{detailProduct.sku}</Text>
+                  </View>
+                  <View style={[styles.specDivider, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#DDE8E0' }]} />
+                  <View style={styles.specItem}>
+                    <Text style={[styles.specLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>Sisa Stok</Text>
+                    <Text style={[styles.specValue, { color: isDark ? '#D1F5E8' : themeColors.primary }]}>
+                      {detailProduct.stock} {detailProduct.unit}
+                    </Text>
+                  </View>
+                  <View style={[styles.specDivider, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.10)' : '#DDE8E0' }]} />
+                  <View style={styles.specItem}>
+                    <Text style={[styles.specLabel, { color: isDark ? '#D1F5E8' : '#64746A' }]}>Terjual</Text>
+                    <Text style={[styles.specValue, { color: isDark ? '#FFFFFF' : '#183326' }]}>{detailProduct.soldCount} pcs</Text>
+                  </View>
+                </View>
+
+                {/* Description */}
+                <View style={styles.detailDescSection}>
+                  <Text style={[styles.detailSectionTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+                    Deskripsi & Spesifikasi
+                  </Text>
+                  <Text style={[styles.detailDescText, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
+                    {detailProduct.description}
+                  </Text>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.detailActionsRow}>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    style={{ flex: 1 }}
+                    leftIcon={<Boxes size={16} color={isDark ? '#D1F5E8' : themeColors.primaryDark} />}
+                    onPress={() => {
+                      const p = detailProduct;
+                      setDetailProduct(null);
+                      setStockModalProduct(p);
+                      setNewStockInput(String(p.stock));
+                    }}
+                  >
+                    Ubah Stok
+                  </Button>
+
+                  <Button
+                    variant="primary"
+                    size="md"
+                    style={{ flex: 1 }}
+                    leftIcon={<Edit2 size={16} color="#FFFFFF" />}
+                    onPress={() => {
+                      const p = detailProduct;
+                      setDetailProduct(null);
+                      setEditingProduct(p);
+                      setIsAddModalOpen(true);
+                    }}
+                  >
+                    Edit Produk
+                  </Button>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* ADD / EDIT PRODUCT MODAL */}
       {isAddModalOpen && (
         <ProductFormModal
           isOpen={isAddModalOpen}
@@ -336,7 +711,7 @@ export function ProductsScreen() {
         />
       )}
 
-      {/* Quick Stock Modal */}
+      {/* QUICK STOCK MODAL */}
       <Modal
         visible={!!stockModalProduct}
         transparent
@@ -344,13 +719,22 @@ export function ProductsScreen() {
         onRequestClose={() => setStockModalProduct(null)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.stockModalBox}>
-            <Text style={styles.stockModalTitle}>Ubah Jumlah Stok</Text>
-            <Text style={styles.stockModalDesc}>
+          <View
+            style={[
+              styles.stockModalBox,
+              {
+                backgroundColor: isDark ? 'rgba(22, 58, 38, 0.98)' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(209, 245, 232, 0.20)' : '#DDE8E0',
+              },
+            ]}
+          >
+            <Text style={[styles.stockModalTitle, { color: isDark ? '#FFFFFF' : '#183326' }]}>
+              Ubah Jumlah Stok
+            </Text>
+            <Text style={[styles.stockModalDesc, { color: isDark ? '#D1F5E8' : '#64746A' }]}>
               {stockModalProduct?.name} ({stockModalProduct?.unit})
             </Text>
-            <TextInput
-              style={styles.stockModalInput}
+            <Input
               value={newStockInput}
               onChangeText={setNewStockInput}
               keyboardType="numeric"
@@ -365,13 +749,31 @@ export function ProductsScreen() {
               >
                 Batal
               </Button>
-              <Button variant="primary" size="sm" onPress={handleStockSave}>
+              <Button
+                variant="primary"
+                size="sm"
+                onPress={handleStockSave}
+                isLoading={isStockSaving}
+              >
                 Simpan Stok
               </Button>
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* CONFIRMATION MODAL FOR DELETE */}
+      <ConfirmationModal
+        isOpen={!!deleteTargetProduct}
+        onClose={() => setDeleteTargetProduct(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Produk?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteTargetProduct?.name}" dari katalog toko? Pembeli tidak akan dapat menemukan atau memesan produk ini lagi.`}
+        confirmLabel="Hapus Produk"
+        cancelLabel="Batal"
+        type="danger"
+        isLoading={isDeleting}
+      />
     </SafeAreaView>
   );
 }
@@ -379,7 +781,16 @@ export function ProductsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+  },
+  decorativeOrbTopRight: {
+    position: 'absolute',
+    top: -80,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    overflow: 'hidden',
+    borderWidth: 1,
   },
   header: {
     flexDirection: 'row',
@@ -387,163 +798,163 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 8,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  sheenLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1.5,
   },
   titleCol: {
     flex: 1,
     gap: 2,
+    marginRight: 12,
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    letterSpacing: 1,
   },
   screenTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
+    fontFamily: typography.fontFamily.bold,
+    letterSpacing: -0.3,
   },
   screenSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.regular,
+    marginTop: 1,
   },
-  searchRow: {
+  searchContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginTop: 12,
+    marginBottom: 8,
   },
-  searchWrapper: {
+  tabsSection: {
+    marginBottom: 8,
+  },
+  categorySection: {
+    marginBottom: 10,
+  },
+  chipsRowPadding: {
+    paddingHorizontal: 16,
+  },
+  summaryBar: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  summaryPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 44,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: '#0F172A',
-  },
-  tabsContainer: {
-    paddingVertical: 4,
-  },
-  tabsContent: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  tabChip: {
+    justifyContent: 'space-between',
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  tabChipActive: {
-    backgroundColor: '#32CD32',
-    borderColor: '#32CD32',
+  summaryLabel: {
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.medium,
   },
-
-  tabChipText: {
+  summaryValue: {
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  summaryDivider: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#68746B',
-  },
-  tabChipTextActive: {
-    color: '#FFFFFF',
-  },
-  categoriesContainer: {
-    paddingVertical: 4,
-  },
-  categoriesContent: {
-    paddingHorizontal: 16,
-    gap: 6,
-  },
-  categoryChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8ECE7',
-  },
-  categoryChipActive: {
-    backgroundColor: '#EAF4E3',
-    borderColor: '#A9CF8C',
-  },
-  categoryChipText: {
-    fontSize: 11,
-    color: '#68746B',
-    fontWeight: '600',
-  },
-  categoryChipTextActive: {
-    color: '#3E7821',
   },
   listContent: {
-    padding: 16,
-    paddingBottom: 96,
+    paddingHorizontal: 16,
     gap: 12,
+    paddingTop: 2,
+  },
+  loadingState: {
+    paddingVertical: 40,
   },
   productCard: {
+    borderRadius: 20,
+    borderWidth: 1,
     padding: 14,
     gap: 10,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   productTopRow: {
     flexDirection: 'row',
     gap: 12,
   },
   productImage: {
-    width: 76,
-    height: 76,
-    borderRadius: 12,
-    backgroundColor: '#E8ECE7',
+    width: 86,
+    height: 86,
+    borderRadius: 16,
+    borderWidth: 1,
   },
   productInfo: {
     flex: 1,
-    gap: 3,
+    justifyContent: 'space-between',
   },
   categoryAndBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 2,
   },
   productCategory: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#15803D',
-    textTransform: 'uppercase',
+    fontFamily: typography.fontFamily.medium,
+    flex: 1,
+    marginRight: 6,
   },
   productName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: typography.fontFamily.bold,
+    lineHeight: 19,
+    marginBottom: 2,
   },
   skuText: {
-    fontSize: 10,
-    color: '#94A3B8',
+    fontSize: 11,
+    fontFamily: typography.fontFamily.regular,
+    marginBottom: 4,
   },
   productPrice: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
-    color: '#15803D',
+    fontFamily: typography.fontFamily.extrabold,
+    letterSpacing: -0.2,
   },
   warningStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFBEB',
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#FDE68A',
   },
   warningStripText: {
     fontSize: 11,
     color: '#D97706',
-    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
+    flex: 1,
   },
   dangerStrip: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
+    borderColor: '#FECDD3',
   },
   dangerStripText: {
     color: '#EF4444',
@@ -552,65 +963,178 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
   },
   stockFooterText: {
-    fontSize: 11,
-    color: '#64748B',
+    fontSize: 11.5,
+    fontFamily: typography.fontFamily.regular,
   },
   stockBold: {
     fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: typography.fontFamily.bold,
   },
   actionButtonsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  iconActionBtn: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
-  },
-
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(24, 51, 38, 0.55)',
+    justifyContent: 'flex-end',
   },
-  stockModalBox: {
-    width: '100%',
-    maxWidth: 360,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 20,
-    gap: 12,
-  },
-  stockModalTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#213329',
-  },
-  stockModalDesc: {
-    fontSize: 12,
-    color: '#68746B',
-  },
-  stockModalInput: {
+  detailModalBox: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderWidth: 1,
-    borderColor: '#E2E8DE',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderBottomWidth: 0,
+    maxHeight: '85%',
+    overflow: 'hidden',
+  },
+  detailModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  detailHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailModalTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#213329',
+    fontFamily: typography.fontFamily.bold,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailContent: {
+    padding: 20,
+    gap: 14,
+  },
+  detailHeroImageWrapper: {
+    width: '100%',
+    height: 190,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  detailHeroImage: {
+    width: '80%',
+    height: '80%',
+  },
+  detailHeroBadgeRow: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    gap: 6,
+  },
+  detailProductName: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+    lineHeight: 24,
+  },
+  detailPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 10,
+  },
+  detailPrice: {
+    fontSize: 22,
+    fontWeight: '800',
+    fontFamily: typography.fontFamily.extrabold,
+    letterSpacing: -0.4,
+  },
+  detailOriginalPrice: {
+    fontSize: 14,
+    fontFamily: typography.fontFamily.regular,
+    textDecorationLine: 'line-through',
+  },
+  detailSpecCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  specItem: {
+    alignItems: 'center',
+    gap: 3,
+    flex: 1,
+  },
+  specDivider: {
+    width: 1,
+    height: 28,
+  },
+  specLabel: {
+    fontSize: 10.5,
+    fontFamily: typography.fontFamily.medium,
+  },
+  specValue: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  detailDescSection: {
+    gap: 6,
+  },
+  detailSectionTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  detailDescText: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    fontFamily: typography.fontFamily.regular,
+  },
+  detailActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  stockModalBox: {
+    margin: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 22,
+    gap: 12,
+    shadowColor: '#183326',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  stockModalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
+  },
+  stockModalDesc: {
+    fontSize: 12.5,
+    fontFamily: typography.fontFamily.regular,
+    marginTop: -4,
   },
   stockModalActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 10,
     marginTop: 6,

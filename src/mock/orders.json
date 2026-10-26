@@ -8,17 +8,17 @@
     "status": "Diproses",
     "items": [
       {
-        "productId": "prod-005",
-        "productName": "Pupuk NPK Mutiara 16-16-16 Sak 50kg",
+        "productId": "prod-007",
+        "productName": "Pupuk NPK",
         "category": "Pupuk",
         "quantity": 2,
-        "unitPrice": 520000,
-        "subtotal": 1040000,
-        "productImage": "https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=500&auto=format&fit=crop&q=80",
+        "unitPrice": 450000,
+        "subtotal": 900000,
+        "productImage": "asset:pupukNpk",
         "unit": "Sak (50kg)"
       }
     ],
-    "totalAmount": 1040000,
+    "totalAmount": 900000,
     "shippingFee": 35000,
     "courier": "AgroCargo Express (Kargo Cepat)",
     "trackingNumber": "AGC-SBG-99210",
@@ -36,32 +36,32 @@
     "items": [
       {
         "productId": "prod-001",
-        "productName": "Pupuk Organik Premium Granul 25kg",
+        "productName": "Bionava",
         "category": "Pupuk",
-        "quantity": 5,
-        "unitPrice": 75000,
-        "subtotal": 375000,
-        "productImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=500&auto=format&fit=crop&q=80",
-        "unit": "Sak (25kg)"
+        "quantity": 4,
+        "unitPrice": 85000,
+        "subtotal": 340000,
+        "productImage": "asset:bionava",
+        "unit": "Botol (1 Liter)"
       },
       {
         "productId": "prod-004",
-        "productName": "Benih Padi Ciherang Unggul Sertifikasi 5kg",
-        "category": "Benih",
+        "productName": "Grao Verde",
+        "category": "Pupuk",
         "quantity": 2,
-        "unitPrice": 95000,
-        "subtotal": 190000,
-        "productImage": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=500&auto=format&fit=crop&q=80",
-        "unit": "Kemasan (5kg)"
+        "unitPrice": 110000,
+        "subtotal": 220000,
+        "productImage": "asset:graoVerde",
+        "unit": "Botol (1 Liter)"
       }
     ],
-    "totalAmount": 565000,
+    "totalAmount": 560000,
     "shippingFee": 40000,
     "courier": "J&T Cargo Pertanian",
     "trackingNumber": "JT-PTN-88421",
     "createdAt": "2026-10-07 11:45",
     "paymentMethod": "BCA Virtual Account",
-    "note": "Kirim sore ini jika memungkinkan Pak Budi."
+    "note": "Kirim sore ini jika memungkinkan Pak Fahda."
   },
   {
     "id": "PT20261003",
@@ -72,17 +72,17 @@
     "status": "Menunggu Pembayaran",
     "items": [
       {
-        "productId": "prod-003",
-        "productName": "Sprayer Elektrik Pertanian 16 Liter Baterai Lithium",
+        "productId": "prod-009",
+        "productName": "Sprayer",
         "category": "Alat Pertanian",
         "quantity": 1,
-        "unitPrice": 350000,
-        "subtotal": 350000,
-        "productImage": "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=500&auto=format&fit=crop&q=80",
-        "unit": "Unit"
+        "unitPrice": 320000,
+        "subtotal": 320000,
+        "productImage": "asset:sprayer",
+        "unit": "Unit (16 Liter)"
       }
     ],
-    "totalAmount": 350000,
+    "totalAmount": 320000,
     "shippingFee": 20000,
     "courier": "SiCepat Agro",
     "createdAt": "2026-10-07 17:10",
@@ -97,17 +97,17 @@
     "status": "Dikirim",
     "items": [
       {
-        "productId": "prod-002",
-        "productName": "Pestisida Bio Natural Ekstrak Mimba 1 Liter",
+        "productId": "prod-006",
+        "productName": "Prosil",
         "category": "Pestisida",
-        "quantity": 10,
-        "unitPrice": 85000,
-        "subtotal": 850000,
-        "productImage": "https://images.unsplash.com/photo-1592417817098-8f3d6910985c?w=500&auto=format&fit=crop&q=80",
-        "unit": "Botol (1L)"
+        "quantity": 5,
+        "unitPrice": 135000,
+        "subtotal": 675000,
+        "productImage": "asset:prosil",
+        "unit": "Botol (500ml)"
       }
     ],
-    "totalAmount": 850000,
+    "totalAmount": 675000,
     "shippingFee": 45000,
     "courier": "AgroCargo Express",
     "trackingNumber": "AGC-IDM-44512",
@@ -124,18 +124,18 @@
     "status": "Selesai",
     "items": [
       {
-        "productId": "prod-001",
-        "productName": "Pupuk Organik Premium Granul 25kg",
-        "category": "Pupuk",
-        "quantity": 10,
-        "unitPrice": 75000,
-        "subtotal": 750000,
-        "productImage": "https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=500&auto=format&fit=crop&q=80",
-        "unit": "Sak (25kg)"
+        "productId": "prod-002",
+        "productName": "Cangkul",
+        "category": "Alat Pertanian",
+        "quantity": 4,
+        "unitPrice": 95000,
+        "subtotal": 380000,
+        "productImage": "asset:cangkul",
+        "unit": "Pcs"
       }
     ],
-    "totalAmount": 750000,
-    "shippingFee": 50000,
+    "totalAmount": 380000,
+    "shippingFee": 35000,
     "courier": "JNE Trucking (JTR)",
     "trackingNumber": "JTR-KRW-11029",
     "createdAt": "2026-10-04 13:15",
@@ -150,17 +150,17 @@
     "status": "Dibatalkan",
     "items": [
       {
-        "productId": "prod-007",
-        "productName": "Cangkul Baja Super Tani Anti Lengket Gagang Kayu Jati",
+        "productId": "prod-003",
+        "productName": "Cangkul 2",
         "category": "Alat Pertanian",
         "quantity": 2,
-        "unitPrice": 115000,
-        "subtotal": 230000,
-        "productImage": "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=500&auto=format&fit=crop&q=80",
+        "unitPrice": 125000,
+        "subtotal": 250000,
+        "productImage": "asset:cangkul2",
         "unit": "Pcs"
       }
     ],
-    "totalAmount": 230000,
+    "totalAmount": 250000,
     "shippingFee": 25000,
     "courier": "SiCepat Agro",
     "createdAt": "2026-10-03 16:40",

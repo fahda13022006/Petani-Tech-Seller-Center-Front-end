@@ -8,6 +8,9 @@ import {
   Inbox,
 } from 'lucide-react-native';
 import { Button } from './Button';
+import { colors } from '@/theme/colors';
+import { typography } from '@/theme/typography';
+import { useTheme } from '@/theme/ThemeContext';
 
 export type EmptyStateVariant = 'products' | 'orders' | 'transactions' | 'search' | 'error' | 'default';
 
@@ -15,19 +18,19 @@ const VARIANT_CONFIG = {
   products: {
     emoji: '🌱',
     title: 'Belum Ada Produk',
-    description: 'Tambahkan produk pertanian pertama Anda untuk mulai berjualan ke ribuan petani.',
+    description: 'Tambahkan produk pertanian pertama Anda untuk mulai berjualan ke ribuan petani mitra.',
     icon: Package,
   },
   orders: {
     emoji: '📦',
     title: 'Belum Ada Pesanan',
-    description: 'Aktifkan fitur promosi musim tanam untuk mendatangkan pesanan baru.',
+    description: 'Aktifkan program promosi musim tanam untuk mendatangkan pesanan baru.',
     icon: ShoppingCart,
   },
   transactions: {
     emoji: '💳',
     title: 'Belum Ada Transaksi',
-    description: 'Riwayat transaksi keuangan toko akan muncul di sini setelah ada penjualan.',
+    description: 'Riwayat transaksi keuangan toko akan muncul di sini setelah ada pesanan selesai.',
     icon: Inbox,
   },
   search: {
@@ -77,6 +80,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   secondaryAction,
   style,
 }) => {
+  const { isDark } = useTheme();
   const config = VARIANT_CONFIG[variant];
   const displayEmoji = emoji ?? config.emoji;
   const displayTitle = title ?? config.title;
@@ -84,12 +88,38 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.emojiCircle}>
+      <View
+        style={[
+          styles.emojiCircle,
+          {
+            backgroundColor: isDark
+              ? 'rgba(64, 145, 108, 0.22)'
+              : '#EAF4EE',
+            borderColor: isDark
+              ? 'rgba(209, 245, 232, 0.28)'
+              : '#C3DBC7',
+          },
+        ]}
+      >
         <Text style={styles.emojiText}>{displayEmoji}</Text>
       </View>
 
-      <Text style={styles.title}>{displayTitle}</Text>
-      <Text style={styles.description}>{displayDesc}</Text>
+      <Text
+        style={[
+          styles.title,
+          { color: isDark ? '#FFFFFF' : '#183326' },
+        ]}
+      >
+        {displayTitle}
+      </Text>
+      <Text
+        style={[
+          styles.description,
+          { color: isDark ? '#D1F5E8' : '#64746A' },
+        ]}
+      >
+        {displayDesc}
+      </Text>
 
       {action ? (
         <View style={styles.actionRow}>
@@ -125,20 +155,54 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   message = 'Gagal memuat data. Silakan coba lagi.',
   onRetry,
   style,
-}) => (
-  <View style={[styles.container, style]}>
-    <View style={[styles.emojiCircle, styles.errorCircle]}>
-      <AlertCircle size={32} color="#D95757" />
+}) => {
+  const { isDark } = useTheme();
+
+  return (
+    <View style={[styles.container, style]}>
+      <View
+        style={[
+          styles.emojiCircle,
+          styles.errorCircle,
+          {
+            backgroundColor: isDark
+              ? 'rgba(239, 68, 68, 0.20)'
+              : '#FFF1F2',
+            borderColor: isDark
+              ? 'rgba(239, 68, 68, 0.35)'
+              : '#FECDD3',
+          },
+        ]}
+      >
+        <AlertCircle
+          size={32}
+          color={isDark ? '#FCA5A5' : colors.semantic.danger.DEFAULT}
+        />
+      </View>
+      <Text
+        style={[
+          styles.title,
+          { color: isDark ? '#FFFFFF' : '#183326' },
+        ]}
+      >
+        Oops! Terjadi Kesalahan
+      </Text>
+      <Text
+        style={[
+          styles.description,
+          { color: isDark ? '#D1F5E8' : '#64746A' },
+        ]}
+      >
+        {message}
+      </Text>
+      {onRetry ? (
+        <Button variant="outline" size="sm" onPress={onRetry}>
+          Coba Lagi
+        </Button>
+      ) : null}
     </View>
-    <Text style={styles.title}>Oops! Terjadi Kesalahan</Text>
-    <Text style={styles.description}>{message}</Text>
-    {onRetry ? (
-      <Button variant="outline" size="sm" onPress={onRetry}>
-        Coba Lagi
-      </Button>
-    ) : null}
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -149,37 +213,43 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emojiCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#EAF4E3',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#EAF4EE',
+    borderWidth: 1.5,
+    borderColor: '#C3DBC7',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
   },
   errorCircle: {
-    backgroundColor: '#FDF0F0',
+    backgroundColor: '#FFF1F2',
+    borderColor: '#FECDD3',
   },
   emojiText: {
-    fontSize: 28,
+    fontSize: 30,
   },
   title: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#213329',
+    fontFamily: typography.fontFamily.bold,
+    color: colors.neutral[900],
     textAlign: 'center',
   },
   description: {
-    fontSize: 12,
-    color: '#818981',
+    fontSize: 12.5,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.neutral[600],
     textAlign: 'center',
-    lineHeight: 18,
-    maxWidth: 280,
+    lineHeight: 19,
+    maxWidth: 290,
     marginBottom: 8,
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    marginTop: 4,
   },
 });

@@ -8,12 +8,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { analyticsService } from '@/services/analyticsService';
 import { AnalyticsSummary } from '@/types';
-import { Card } from '@/components/common/Card';
-import { StatCard } from '@/components/common/StatCard';
+import { Card } from '@/components/cards/Card';
+import { StatCard } from '@/components/cards/StatCard';
 import { Badge } from '@/components/common/Badge';
 import { formatRupiah, formatNumber } from '@/constants';
+import { colors } from '@/theme/colors';
+import { useTheme } from '@/theme';
 import {
   Users,
   TrendingUp,
@@ -23,6 +26,7 @@ import {
 } from 'lucide-react-native';
 
 export function AnalyticsScreen() {
+  const { themeColors, isDarkMode } = useTheme();
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [metricView, setMetricView] = useState<'revenue' | 'orders'>('revenue');
@@ -33,15 +37,16 @@ export function AnalyticsScreen() {
 
   if (!data) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#32CD32" />
-          <Text style={styles.loadingText}>Memuat analitik performa toko...</Text>
+          <ActivityIndicator size="large" color={themeColors.primary} />
+          <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+            Memuat analitik performa toko...
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
-
 
   const currentChartData =
     timeframe === 'daily'
@@ -56,35 +61,50 @@ export function AnalyticsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={themeColors.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.header}
+      >
         <View style={styles.titleCol}>
-          <Text style={styles.screenTitle}>Performa Toko</Text>
-          <Text style={styles.screenSubtitle}>
-            Metrik penjualan produk pertanian dan konversi pembeli
+          <Text style={[styles.screenTitle, { color: themeColors.textPrimary }]}>Performa Toko</Text>
+          <Text style={[styles.screenSubtitle, { color: themeColors.textSecondary }]}>
+            Metrik penjualan produk pertanian dan konversi pembeli mitra
           </Text>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Timeframe Switcher */}
-        <View style={styles.timeframeRow}>
+        <View
+          style={[
+            styles.timeframeRow,
+            {
+              backgroundColor: themeColors.cardBackground,
+              borderColor: themeColors.cardBorder,
+            },
+          ]}
+        >
           {(['daily', 'weekly', 'monthly'] as const).map((t) => (
             <TouchableOpacity
               key={t}
               onPress={() => setTimeframe(t)}
               style={[
                 styles.timeframeBtn,
-                timeframe === t && styles.timeframeBtnActive,
+                timeframe === t && { backgroundColor: themeColors.primary },
               ]}
+              activeOpacity={0.75}
             >
               <Text
                 style={[
                   styles.timeframeBtnText,
+                  { color: themeColors.textSecondary },
                   timeframe === t && styles.timeframeBtnTextActive,
                 ]}
               >
@@ -100,9 +120,8 @@ export function AnalyticsScreen() {
             title="Total Pendapatan"
             value={formatRupiah(data.summary.totalOrders * data.summary.averageOrderValue)}
             icon={DollarSign}
-            iconBgColor="#F0FDF4"
-            iconColor="#15803D"
-
+            iconBgColor={isDarkMode ? 'rgba(64,145,108,0.2)' : '#EAF4EE'}
+            iconColor={themeColors.accent}
             trend={{ value: '+18.4%', isPositive: true }}
             style={styles.statCardHalf}
           />
@@ -110,8 +129,8 @@ export function AnalyticsScreen() {
             title="Total Pesanan"
             value={`${data.summary.totalOrders} Pesanan`}
             icon={ShoppingCart}
-            iconBgColor="#EFF6FF"
-            iconColor="#2563EB"
+            iconBgColor={isDarkMode ? 'rgba(37,99,235,0.18)' : '#EFF6FF'}
+            iconColor="#3B82F6"
             trend={{ value: '+12%', isPositive: true }}
             style={styles.statCardHalf}
           />
@@ -122,8 +141,8 @@ export function AnalyticsScreen() {
             title="Pengunjung Toko"
             value={formatNumber(data.summary.totalVisitors)}
             icon={Users}
-            iconBgColor="#FFFBEB"
-            iconColor="#D97706"
+            iconBgColor={isDarkMode ? 'rgba(217,119,6,0.18)' : '#FFFBEB'}
+            iconColor="#F59E0B"
             trend={{ value: '+24%', isPositive: true }}
             style={styles.statCardHalf}
           />
@@ -131,35 +150,61 @@ export function AnalyticsScreen() {
             title="Tingkat Konversi"
             value={`${data.summary.conversionRate}%`}
             icon={TrendingUp}
-            iconBgColor="#ECFDF5"
-            iconColor="#059669"
+            iconBgColor={isDarkMode ? 'rgba(64,145,108,0.2)' : '#EAF4EE'}
+            iconColor={themeColors.accent}
             trend={{ value: '+1.8%', isPositive: true }}
             style={styles.statCardHalf}
           />
         </View>
 
         {/* Interactive Bar Chart Card */}
-        <Card style={styles.chartCard}>
+        <Card
+          style={[
+            styles.chartCard,
+            {
+              backgroundColor: themeColors.cardBackground,
+              borderColor: themeColors.cardBorder,
+            },
+          ]}
+        >
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>Grafik Tren Penjualan</Text>
-              <Text style={styles.chartSub}>
+              <Text style={[styles.chartTitle, { color: themeColors.textPrimary }]}>
+                Grafik Tren Penjualan
+              </Text>
+              <Text style={[styles.chartSub, { color: themeColors.textMuted }]}>
                 {metricView === 'revenue' ? 'Omset Penjualan (Rp)' : 'Volume Jumlah Pesanan'}
               </Text>
             </View>
 
-            <View style={styles.metricSwitchRow}>
+            <View
+              style={[
+                styles.metricSwitchRow,
+                {
+                  backgroundColor: isDarkMode
+                    ? 'rgba(255,255,255,0.08)'
+                    : '#F0F5F1',
+                },
+              ]}
+            >
               <TouchableOpacity
                 onPress={() => setMetricView('revenue')}
                 style={[
                   styles.metricSwitchChip,
-                  metricView === 'revenue' && styles.metricSwitchChipActive,
+                  metricView === 'revenue' && {
+                    backgroundColor: isDarkMode ? themeColors.surface : '#FFFFFF',
+                  },
                 ]}
+                activeOpacity={0.75}
               >
                 <Text
                   style={[
                     styles.metricSwitchText,
-                    metricView === 'revenue' && styles.metricSwitchTextActive,
+                    { color: themeColors.textMuted },
+                    metricView === 'revenue' && {
+                      color: themeColors.textPrimary,
+                      fontWeight: '700',
+                    },
                   ]}
                 >
                   Omset
@@ -169,13 +214,20 @@ export function AnalyticsScreen() {
                 onPress={() => setMetricView('orders')}
                 style={[
                   styles.metricSwitchChip,
-                  metricView === 'orders' && styles.metricSwitchChipActive,
+                  metricView === 'orders' && {
+                    backgroundColor: isDarkMode ? themeColors.surface : '#FFFFFF',
+                  },
                 ]}
+                activeOpacity={0.75}
               >
                 <Text
                   style={[
                     styles.metricSwitchText,
-                    metricView === 'orders' && styles.metricSwitchTextActive,
+                    { color: themeColors.textMuted },
+                    metricView === 'orders' && {
+                      color: themeColors.textPrimary,
+                      fontWeight: '700',
+                    },
                   ]}
                 >
                   Pesanan
@@ -188,7 +240,7 @@ export function AnalyticsScreen() {
           <View style={styles.barChartContainer}>
             {currentChartData.map((item, idx) => {
               const val = metricView === 'revenue' ? item.penjualan : item.pesanan;
-              const barHeightPct = Math.max(12, Math.round((val / maxVal) * 100));
+              const barHeightPct = Math.max(14, Math.round((val / maxVal) * 100));
               const label =
                 'date' in item
                   ? (item as { date: string }).date
@@ -198,13 +250,32 @@ export function AnalyticsScreen() {
 
               return (
                 <View key={idx} style={styles.barColumn}>
-                  <Text style={styles.barValueText}>
+                  <Text style={[styles.barValueText, { color: themeColors.textMuted }]}>
                     {metricView === 'revenue' ? `${Math.round(val / 1000000)}jt` : val}
                   </Text>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { height: `${barHeightPct}%` }]} />
+                  <View
+                    style={[
+                      styles.barTrack,
+                      {
+                        backgroundColor: isDarkMode
+                          ? 'rgba(255,255,255,0.08)'
+                          : '#F0F5F1',
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.barFill,
+                        {
+                          height: `${barHeightPct}%`,
+                          backgroundColor: themeColors.accent,
+                        },
+                      ]}
+                    />
                   </View>
-                  <Text style={styles.barLabelText}>{label}</Text>
+                  <Text style={[styles.barLabelText, { color: themeColors.textSecondary }]}>
+                    {label}
+                  </Text>
                 </View>
               );
             })}
@@ -212,31 +283,59 @@ export function AnalyticsScreen() {
         </Card>
 
         {/* Top Selling Products List */}
-        <Card style={styles.topProductsCard}>
+        <Card
+          style={[
+            styles.topProductsCard,
+            {
+              backgroundColor: themeColors.cardBackground,
+              borderColor: themeColors.cardBorder,
+            },
+          ]}
+        >
           <View style={styles.topProductsHeader}>
-            <BarChart3 size={18} color="#15803D" />
-
-            <Text style={styles.topProductsTitle}>Produk Terlaris Bulan Ini</Text>
+            <BarChart3 size={18} color={themeColors.accent} />
+            <Text style={[styles.topProductsTitle, { color: themeColors.textPrimary }]}>
+              Produk Terlaris Bulan Ini
+            </Text>
           </View>
 
           {data.topProducts.map((prod, idx) => (
-            <View key={idx} style={styles.topProductRow}>
-              <View style={styles.rankCircle}>
-                <Text style={styles.rankText}>{idx + 1}</Text>
+            <View
+              key={idx}
+              style={[
+                styles.topProductRow,
+                { borderBottomColor: themeColors.divider },
+              ]}
+            >
+              <View
+                style={[
+                  styles.rankCircle,
+                  {
+                    backgroundColor: isDarkMode
+                      ? 'rgba(64,145,108,0.2)'
+                      : '#EAF4EE',
+                  },
+                ]}
+              >
+                <Text style={[styles.rankText, { color: themeColors.accent }]}>
+                  {idx + 1}
+                </Text>
               </View>
 
               <View style={styles.topProductDetails}>
-                <Text style={styles.topProductName}>{prod.name}</Text>
-                <Text style={styles.topProductSub}>
+                <Text style={[styles.topProductName, { color: themeColors.textPrimary }]}>
+                  {prod.name}
+                </Text>
+                <Text style={[styles.topProductSub, { color: themeColors.textMuted }]}>
                   {prod.category} · Terjual {prod.soldCount} pcs
                 </Text>
               </View>
 
               <View style={styles.topProductRight}>
-                <Text style={styles.topProductRevenue}>
+                <Text style={[styles.topProductRevenue, { color: themeColors.accent }]}>
                   {formatRupiah(prod.revenue)}
                 </Text>
-                <Badge variant="success" size="sm">
+                <Badge variant="brand" size="sm">
                   {`+${prod.growth}%`}
                 </Badge>
               </View>
@@ -251,7 +350,7 @@ export function AnalyticsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAF9F6',
   },
   loadingContainer: {
     flex: 1,
@@ -260,8 +359,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#64748B',
+    color: colors.neutral[600],
     fontSize: 13,
+    fontFamily: 'Poppins, sans-serif',
   },
   header: {
     paddingHorizontal: 16,
@@ -272,13 +372,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   screenTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
+    letterSpacing: -0.3,
   },
   screenSubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.neutral[600],
+    fontFamily: 'Poppins, sans-serif',
   },
   scrollContent: {
     padding: 16,
@@ -289,24 +392,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
+    borderColor: '#E6EDE7',
+    borderRadius: 16,
     padding: 4,
     gap: 4,
   },
   timeframeBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
   },
   timeframeBtnActive: {
-    backgroundColor: '#32CD32',
+    backgroundColor: colors.primary.DEFAULT,
   },
   timeframeBtnText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748B',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[600],
   },
   timeframeBtnTextActive: {
     color: '#FFFFFF',
@@ -320,10 +424,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chartCard: {
-    padding: 16,
+    padding: 18,
     gap: 14,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E6EDE7',
+    backgroundColor: '#FFFFFF',
   },
   chartHeader: {
     flexDirection: 'row',
@@ -332,41 +438,44 @@ const styles = StyleSheet.create({
   },
   chartTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontWeight: '700',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   chartSub: {
     fontSize: 11,
-    color: '#94A3B8',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[500],
     marginTop: 1,
   },
   metricSwitchRow: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
+    backgroundColor: '#F0F5F1',
+    borderRadius: 10,
     padding: 2,
     gap: 2,
   },
   metricSwitchChip: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   metricSwitchChipActive: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
+    shadowColor: '#1B261D',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 1,
   },
   metricSwitchText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#94A3B8',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[500],
   },
   metricSwitchTextActive: {
-    color: '#15803D',
+    color: colors.primary.dark,
     fontWeight: '700',
   },
   barChartContainer: {
@@ -385,33 +494,37 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   barValueText: {
-    fontSize: 9,
-    color: '#94A3B8',
+    fontSize: 9.5,
+    color: colors.neutral[500],
+    fontFamily: 'Poppins, sans-serif',
     fontWeight: '600',
   },
   barTrack: {
     width: 22,
     height: 110,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 6,
+    backgroundColor: '#F0F5F1',
+    borderRadius: 8,
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
   barFill: {
     width: '100%',
-    backgroundColor: '#32CD32',
-    borderRadius: 6,
+    backgroundColor: colors.primary.DEFAULT,
+    borderRadius: 8,
   },
   barLabelText: {
-    fontSize: 9,
-    color: '#64748B',
+    fontSize: 9.5,
+    color: colors.neutral[600],
+    fontFamily: 'Poppins, sans-serif',
     fontWeight: '600',
   },
   topProductsCard: {
-    padding: 16,
+    padding: 18,
     gap: 12,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E6EDE7',
+    backgroundColor: '#FFFFFF',
   },
   topProductsHeader: {
     flexDirection: 'row',
@@ -421,50 +534,55 @@ const styles = StyleSheet.create({
   },
   topProductsTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontWeight: '700',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   topProductRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#F0F5F1',
   },
   rankCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#F0FDF4',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#EAF4EE',
     alignItems: 'center',
     justifyContent: 'center',
   },
   rankText: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '800',
-    color: '#15803D',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.primary.dark,
   },
   topProductDetails: {
     flex: 1,
     gap: 2,
   },
   topProductName: {
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[900],
   },
   topProductSub: {
-    fontSize: 10,
-    color: '#94A3B8',
+    fontSize: 10.5,
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.neutral[500],
   },
   topProductRight: {
     alignItems: 'flex-end',
     gap: 4,
   },
   topProductRevenue: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#15803D',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: 'Poppins, sans-serif',
+    color: colors.primary.DEFAULT,
   },
 });

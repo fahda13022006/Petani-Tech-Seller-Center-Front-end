@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View, StyleProp, ViewStyle } from 'react-native';
 import { Card } from './Card';
 import { colors } from '@/theme/colors';
+import { typography } from '@/theme/typography';
+import { useTheme } from '@/theme';
 
 export interface StatCardProps {
   title: string;
@@ -24,31 +26,47 @@ export const StatCard: React.FC<StatCardProps> = ({
   value,
   subtitle,
   icon: Icon,
-  iconBgColor = colors.primary.soft,
-  iconColor = colors.primary.vibrant,
+  iconBgColor,
+  iconColor,
   trend,
   onClick,
   onPress,
   style,
 }) => {
+  const { themeColors, isDarkMode } = useTheme();
+
+  const defaultIconBg = isDarkMode ? 'rgba(64, 145, 108, 0.16)' : '#EAF4EE';
+  const defaultIconColor = isDarkMode ? themeColors.accent : colors.primary.DEFAULT;
+
   return (
     <Card
       onPress={onPress || onClick}
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: themeColors.cardBackground,
+          borderColor: themeColors.cardBorder,
+        },
+        style,
+      ]}
     >
       <View style={styles.topRow}>
         <View style={styles.textColumn}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.value}>{value}</Text>
+          <Text style={[styles.title, { color: themeColors.textSecondary }]}>{title}</Text>
+          <Text style={[styles.value, { color: themeColors.textPrimary }]}>{value}</Text>
         </View>
-        <View style={[styles.iconWrapper, { backgroundColor: iconBgColor }]}>
-          <Icon size={20} color={iconColor} />
+        <View style={[styles.iconWrapper, { backgroundColor: iconBgColor || defaultIconBg }]}>
+          <Icon size={20} color={iconColor || defaultIconColor} />
         </View>
       </View>
 
       {(subtitle || trend) && (
-        <View style={styles.bottomRow}>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : <View />}
+        <View style={[styles.bottomRow, { borderTopColor: themeColors.divider }]}>
+          {subtitle ? (
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{subtitle}</Text>
+          ) : (
+            <View />
+          )}
           {trend ? (
             <Text
               style={[
@@ -69,6 +87,10 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E6EDE7',
+    backgroundColor: '#FFFFFF',
   },
   topRow: {
     flexDirection: 'row',
@@ -82,17 +104,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.neutral[500],
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.neutral[600],
   },
   value: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
+    fontFamily: typography.fontFamily.bold,
     color: colors.neutral[900],
   },
   iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -102,18 +126,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: colors.neutral[100],
+    borderTopColor: '#F0F5F1',
   },
   subtitle: {
     fontSize: 11,
+    fontFamily: typography.fontFamily.regular,
     color: colors.neutral[500],
   },
   trendText: {
     fontSize: 11,
     fontWeight: '700',
+    fontFamily: typography.fontFamily.bold,
   },
   trendPositive: {
-    color: colors.semantic.success.DEFAULT,
+    color: colors.primary.DEFAULT,
   },
   trendNegative: {
     color: colors.semantic.danger.DEFAULT,

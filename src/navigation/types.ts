@@ -15,6 +15,7 @@ export type RootStackParamList = {
 };
 
 export type AuthStackParamList = {
-  Login: undefined;
+  Splash: undefined;
+  Login: { initialTab?: 'login' | 'register' } | undefined;
   Register: undefined;
 };

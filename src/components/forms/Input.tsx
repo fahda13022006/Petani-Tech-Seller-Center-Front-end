@@ -11,7 +11,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { colors } from '@/theme/colors';
+import { typography } from '@/theme/typography';
+import { useTheme } from '@/theme/ThemeContext';
 
 export interface InputProps extends Omit<TextInputProps, 'onChange'> {
   label?: string;
@@ -21,6 +22,7 @@ export interface InputProps extends Omit<TextInputProps, 'onChange'> {
   rightIcon?: React.ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
+  variant?: 'default' | 'glass';
   type?: string;
   required?: boolean;
   min?: number;
@@ -38,6 +40,7 @@ export const Input = React.forwardRef<TextInput, InputProps>(
       rightIcon,
       containerStyle,
       inputStyle,
+      variant = 'default',
       type,
       onChange,
       onChangeText,
@@ -48,6 +51,7 @@ export const Input = React.forwardRef<TextInput, InputProps>(
     },
     ref
   ) => {
+    const { colors, isDark } = useTheme();
     const isPasswordType = type === 'password' || props.secureTextEntry;
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -75,10 +79,33 @@ export const Input = React.forwardRef<TextInput, InputProps>(
       if (onBlur) onBlur(e);
     };
 
+    const getBgColor = () => {
+      if (error) {
+        return isDark ? 'rgba(239, 68, 68, 0.15)' : '#FFF8F8';
+      }
+      if (variant === 'glass') {
+        return isDark ? 'rgba(22, 58, 38, 0.65)' : 'rgba(255, 255, 255, 0.90)';
+      }
+      return colors.inputBg;
+    };
+
+    const getBorderColor = () => {
+      if (error) {
+        return colors.semantic.danger.DEFAULT;
+      }
+      if (isFocused) {
+        return colors.primary;
+      }
+      if (variant === 'glass') {
+        return isDark ? 'rgba(209, 245, 232, 0.25)' : '#DDE8E0';
+      }
+      return colors.inputBorder;
+    };
+
     return (
       <View style={[styles.container, containerStyle]}>
         {label ? (
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: colors.text }]}>
             {label}
             {props.required && <Text style={styles.required}> *</Text>}
           </Text>
@@ -87,8 +114,12 @@ export const Input = React.forwardRef<TextInput, InputProps>(
         <View
           style={[
             styles.inputWrapper,
+            {
+              backgroundColor: getBgColor(),
+              borderColor: getBorderColor(),
+            },
+            variant === 'glass' && styles.inputGlass,
             isFocused && styles.inputFocused,
-            error ? styles.inputError : null,
           ]}
         >
           {leftIcon ? <View style={styles.leftIcon}>{leftIcon}</View> : null}
@@ -101,9 +132,10 @@ export const Input = React.forwardRef<TextInput, InputProps>(
             onBlur={handleBlur}
             secureTextEntry={isPasswordType && !isPasswordVisible}
             keyboardType={keyboardType}
-            placeholderTextColor={colors.neutral[400]}
+            placeholderTextColor={colors.inputPlaceholder}
             style={[
               styles.input,
+              { color: colors.inputText },
               leftIcon ? styles.inputWithLeftIcon : null,
               rightIcon || isPasswordType ? styles.inputWithRightIcon : null,
               inputStyle,
@@ -119,9 +151,9 @@ export const Input = React.forwardRef<TextInput, InputProps>(
               activeOpacity={0.7}
             >
               {isPasswordVisible ? (
-                <EyeOff size={18} color={isFocused ? colors.primary.DEFAULT : colors.neutral[500]} />
+                <EyeOff size={18} color={isFocused ? colors.primary : colors.textMuted} />
               ) : (
-                <Eye size={18} color={isFocused ? colors.primary.DEFAULT : colors.neutral[500]} />
+                <Eye size={18} color={isFocused ? colors.primary : colors.textMuted} />
               )}
             </TouchableOpacity>
           ) : rightIcon ? (
@@ -130,13 +162,21 @@ export const Input = React.forwardRef<TextInput, InputProps>(
         </View>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        {!error && hint ? <Text style={styles.hintText}>{hint}</Text> : null}
+        {!error && hint ? (
+          <Text style={[styles.hintText, { color: colors.textSecondary }]}>{hint}</Text>
+        ) : null}
       </View>
     );
   }
 );
 
 Input.displayName = 'Input';
+
+export const GlassInput = React.forwardRef<TextInput, InputProps>((props, ref) => (
+  <Input ref={ref} {...props} variant="glass" />
+));
+
+GlassInput.displayName = 'GlassInput';
 
 const styles = StyleSheet.create({
   container: {
@@ -145,49 +185,44 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '700',
-    color: colors.neutral[800],
+    fontWeight: '600',
+    fontFamily: typography.fontFamily.semibold,
     letterSpacing: 0.1,
   },
   required: {
-    color: colors.semantic.danger.DEFAULT,
+    color: '#EF4444',
   },
   inputWrapper: {
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
+    borderRadius: 16,
     minHeight: 48,
-    shadowColor: '#000000',
+    shadowColor: '#183326',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02,
-    shadowRadius: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     elevation: 1,
   },
-  inputFocused: {
-    backgroundColor: '#FFFFFF',
-    borderColor: colors.primary.DEFAULT,
-    shadowColor: colors.primary.DEFAULT,
+  inputGlass: {
+    shadowColor: '#183326',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.06,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 2,
   },
-  inputError: {
-    borderColor: colors.semantic.danger.DEFAULT,
-    backgroundColor: '#FFF8F8',
-    shadowColor: colors.semantic.danger.DEFAULT,
-    shadowOpacity: 0.12,
+  inputFocused: {
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 2,
   },
   input: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
-    color: colors.neutral[900],
+    fontFamily: typography.fontFamily.regular,
   },
   inputWithLeftIcon: {
     paddingLeft: 44,
@@ -207,12 +242,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 11.5,
-    color: colors.semantic.danger.DEFAULT,
-    fontWeight: '600',
+    color: '#EF4444',
+    fontWeight: '500',
+    fontFamily: typography.fontFamily.medium,
   },
   hintText: {
     fontSize: 11.5,
-    color: colors.neutral[500],
+    fontFamily: typography.fontFamily.regular,
   },
 });
-

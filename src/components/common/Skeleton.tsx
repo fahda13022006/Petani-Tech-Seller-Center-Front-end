@@ -1,12 +1,15 @@
 import React from 'react';
 import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 
+import { useTheme } from '@/theme/ThemeContext';
+
 export interface SkeletonProps {
   style?: StyleProp<ViewStyle>;
   rounded?: 'sm' | 'md' | 'lg' | 'full';
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({ style, rounded = 'md' }) => {
+  const { isDark } = useTheme();
   const roundedStyle = {
     sm: styles.roundedSm,
     md: styles.roundedMd,
@@ -14,7 +17,20 @@ export const Skeleton: React.FC<SkeletonProps> = ({ style, rounded = 'md' }) => 
     full: styles.roundedFull,
   }[rounded];
 
-  return <View style={[styles.base, roundedStyle, style]} />;
+  return (
+    <View
+      style={[
+        styles.base,
+        {
+          backgroundColor: isDark
+            ? 'rgba(255, 255, 255, 0.08)'
+            : '#EAEFE7',
+        },
+        roundedStyle,
+        style,
+      ]}
+    />
+  );
 };
 
 export const SkeletonText: React.FC<{ lines?: number; style?: StyleProp<ViewStyle> }> = ({
@@ -32,26 +48,48 @@ export const SkeletonText: React.FC<{ lines?: number; style?: StyleProp<ViewStyl
   </View>
 );
 
-export const StatCardSkeleton: React.FC = () => (
-  <View style={styles.cardSkeleton}>
-    <View style={styles.row}>
-      <View style={styles.col}>
-        <Skeleton style={{ width: 80, height: 12, marginBottom: 8 }} />
-        <Skeleton style={{ width: 120, height: 24 }} />
+export const StatCardSkeleton: React.FC = () => {
+  const { isDark } = useTheme();
+  return (
+    <View
+      style={[
+        styles.cardSkeleton,
+        {
+          backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#E8ECE7',
+        },
+      ]}
+    >
+      <View style={styles.row}>
+        <View style={styles.col}>
+          <Skeleton style={{ width: 80, height: 12, marginBottom: 8 }} />
+          <Skeleton style={{ width: 120, height: 24 }} />
+        </View>
+        <Skeleton rounded="md" style={{ width: 44, height: 44 }} />
       </View>
-      <Skeleton rounded="md" style={{ width: 44, height: 44 }} />
     </View>
-  </View>
-);
+  );
+};
 
-export const ProductCardSkeleton: React.FC = () => (
-  <View style={styles.cardSkeleton}>
-    <Skeleton rounded="lg" style={{ width: '100%', height: 140, marginBottom: 12 }} />
-    <Skeleton style={{ width: 100, height: 12, marginBottom: 6 }} />
-    <Skeleton style={{ width: '80%', height: 16, marginBottom: 8 }} />
-    <Skeleton style={{ width: 120, height: 20 }} />
-  </View>
-);
+export const ProductCardSkeleton: React.FC = () => {
+  const { isDark } = useTheme();
+  return (
+    <View
+      style={[
+        styles.cardSkeleton,
+        {
+          backgroundColor: isDark ? 'rgba(22, 58, 38, 0.72)' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(209, 245, 232, 0.16)' : '#E8ECE7',
+        },
+      ]}
+    >
+      <Skeleton rounded="lg" style={{ width: '100%', height: 140, marginBottom: 12 }} />
+      <Skeleton style={{ width: 100, height: 12, marginBottom: 6 }} />
+      <Skeleton style={{ width: '80%', height: 16, marginBottom: 8 }} />
+      <Skeleton style={{ width: 120, height: 20 }} />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   base: {

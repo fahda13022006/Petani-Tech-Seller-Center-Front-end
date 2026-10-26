@@ -9,6 +9,9 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.anonymous.petanitechseller"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
